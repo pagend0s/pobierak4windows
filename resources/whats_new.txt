@@ -1,6 +1,6 @@
 Pobierak werja 2.51
 
-Naprawiono błąd krytyczny
+Naprawiono blad krytyczny
 Fixed critical bug
 
 Pobierak werja 2.5
