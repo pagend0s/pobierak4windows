@@ -274,7 +274,7 @@ Function updates_menu(){
                     Write-Host "ffmpeg Folder Doesn't Exists"
                 }
 
-        Write-Host "SCIAGANIE KONWERTERA Z REPOZYTORIUM GITHUB.. TO MOZE TROCHE POTRWAC OK KILKU MINUT"
+        Write-Host "SCIAGANIE KONWERTERA Z REPOZYTORIUM GITHUB.. TO MOZE TROCHE POTRWAC OK KILKU MINUT. OTWORZ BROWAR I CIERPLIWOSCI ;)"
 
         curl -o $recources_main_dir\ffmpeg.zip https://github.com/GyanD/codexffmpeg/releases/download/2022-09-07-git-e4c1272711/ffmpeg-2022-09-07-git-e4c1272711-essentials_build.zip
 
@@ -289,6 +289,8 @@ Function updates_menu(){
         Remove-Item –path $recources_main_dir_unzipped
 
         $unzipped_dir = get-ChildItem -Path $recources_main_dir -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -newname ffmpeg
+        
+        Write-Host "SCIAGANIE KONWERTERA ZAKONCZONE!!!" -ForegroundColor green
 
     }
 
@@ -296,6 +298,7 @@ Function updates_menu(){
 
         #https://github.com/yt-dlp/yt-dlp
         curl -o $recources_main_dir\yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
+        Write-Host "SCIAGANIE YT-DLP ZAKONCZONE!!!" -ForegroundColor green
     }
 
     Function download_all_at_once(){
