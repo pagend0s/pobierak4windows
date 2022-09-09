@@ -1,3 +1,8 @@
+Pobierak werja 2.51
+
+Naprawiono błąd krytyczny
+Fixed critical bug
+
 Pobierak werja 2.5
 -5 opcja w menu ( Sciaganie filmow i/lub audio )
 -Kilka zmian kosmetycznych wrappera
