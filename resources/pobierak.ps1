@@ -1,4 +1,4 @@
-$pobierak_v = "2.51"
+$pobierak_v = "2.52"
 
 $recources_main_dir =  Split-Path $PSCommandPath -Parent
 
@@ -225,8 +225,8 @@ cls
                      
             ForEach ($a in $c) 
                 {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --output ""$output_directory""\%(title)s.%(ext)s $a"
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo*+bestaudio/best --merge-output-format mp4 --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo*+bestaudio/best --merge-output-format mp4 --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
 
 
@@ -238,7 +238,7 @@ cls
         Start explorer.exe $output_directory
         ForEach ($a in $c) 
                 {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo*+bestaudio/best --merge-output-format mp4 --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo*+bestaudio/best --merge-output-format mp4 --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
 
         }
