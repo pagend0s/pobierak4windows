@@ -238,6 +238,7 @@ Function updates_menu(){
         else
             {
                 write-host "BRAK NOWEJ WERSJI POBIERAKA" -ForegroundColor red
+                Remove-Item $path_to_temp -Force -Recurse
             }
 
         if ( $instal_or_not -eq 1 )
