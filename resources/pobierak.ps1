@@ -1,4 +1,4 @@
-﻿$pobierak_v = "2.0"
+$pobierak_v = "2.5"
 
 $recources_main_dir =  Split-Path $PSCommandPath -Parent
 
@@ -59,7 +59,7 @@ Function Select-Folder
         return $dialog.FileName
   }
 }
-
+#1
 function download_song(){
 cls
     do
@@ -100,7 +100,7 @@ SLEEP 1
     Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
 
 }
-
+#2
 Function download_from_list(){
     cls
     $quality = $null
@@ -133,7 +133,7 @@ Function download_from_list(){
         write-host ""
         Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
 }
-
+#3
 Function download_playlist(){
     cls
     [string]$playlist_ID_yt = $(Write-Host "W CELU SCIAGNIECIA CALEY PLYLISTY NIEZBEDNY JEST JEJ IDENTYFIKATOR" -ForegroundColor yellow) + $(Write-Host "IDENTYFIKATOR PLAYLISTY ZOSTAL ZAZNACZONY NA ZIELONO W PRZYKLADOWYM LINKU PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor yellow ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green)  + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CZESC ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow; Read-Host)
@@ -159,7 +159,7 @@ Function download_playlist(){
     write-host ""
     Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
 }
-
+#4
 Function download_channel(){
 
     cls
@@ -185,7 +185,71 @@ Function download_channel(){
     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location $ffmpeg --audio-quality $quality --output ""$output_directory""\%(title)s.%(ext)s $channel_ID_yt "
 
 }
+#5
+Function download_movie_and_or_music_from_list(){
+cls
+    do
+        {
+            SLEEP 1
+            Write-Host ""
+            [string]$s = $(Write-Host "PODAJ KOMPLETNY LINK Z YOUTUBE NP (https://www.youtube.com/watch?v=XmaaSK19jGQ)" -ForegroundColor green) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor green) + $(Write-Host "W CELU PRZEZWANIA WPISZ q i WSCISNIJ enter: " -ForegroundColor red; Read-Host)
+            if ( $s -eq "q" )
+                {
+                }else{$s >> "$recources_main_dir\songs.txt"}          
 
+        }until($s -eq "q"  )
+
+    SLEEP 1
+    do
+        {
+            Write-Host "CZY CHCESZ RAZEM Z VIDEO SCIAGNAC ROWNIEZ SCIEZKE AUDIO ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
+            [int]$audio_yes_no = Read-Host "Enter number from 1-2"
+        }while(($audio_yes_no -ne 1  ) -and ($audio_yes_no -ne 2))
+
+    $c = Get-Content -Path "$recources_main_dir\songs.txt" 
+
+    #PATH TO YT-DLP
+    $cmd = "$yt_dlp"
+    
+    if ( $audio_yes_no -eq 1 )
+        {
+            do
+                {
+                    SLEEP 1
+                    [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
+                    }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
+
+                    #PATH TO OUTPUT DIR
+                    $output_directory = Select-Folder
+                    Start explorer.exe $output_directory
+                     
+            ForEach ($a in $c) 
+                {
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo*+bestaudio/best --merge-output-format mp4 --output ""$output_directory""\%(title)s.%(ext)s $a"
+                }
+
+
+        }
+    else
+        {
+        #PATH TO OUTPUT DIR
+        $output_directory = Select-Folder
+        Start explorer.exe $output_directory
+        ForEach ($a in $c) 
+                {
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo*+bestaudio/best --merge-output-format mp4 --output ""$output_directory""\%(title)s.%(ext)s $a"
+                }
+
+        }
+
+    Remove-Item -Path "$recources_main_dir\songs.txt"
+
+    write-host ""
+    Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
+
+}
+#6
 Function updates_menu(){
 
     Function check_pobierak_version(){
@@ -217,19 +281,20 @@ Function updates_menu(){
         $pobierak_downloaded = $version_v_downloaded.Line.Split('=')[1] -replace '"','' -replace ' ',''
         [double]$pobierak_downloaded_double = [string]$pobierak_downloaded
 
-        Write-Host "pobierak present: $version_present_double"
-
-        Write-Host "pobierak downloaded: $pobierak_downloaded_double"
-
         if ( $pobierak_downloaded_double -gt $version_present_double  )
             {
-
+                Write-Host ""
+                SLEEP 1
                 write-host "JEST DOSTEPNA NOWA WERSJA pobieraka: $pobierak_downloaded_double "  -ForegroundColor green
+                Write-Host ""
+                SLEEP 1
                 $whats_new = ( Get-Content $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new.txt )
                 Write-Host "NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY: $whats_new " -ForegroundColor green
        
                 do
                     {
+                        Write-Host ""
+                        SLEEP 1
                         Write-Host "CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
                         [int]$instal_or_not = Read-Host "Enter number from 1-2"
                     }while(($instal_or_not -ne 1  ) -and ($instal_or_not -ne 2))
@@ -237,23 +302,34 @@ Function updates_menu(){
             }
         else
             {
+                Write-Host ""
+                SLEEP 1
                 write-host "BRAK NOWEJ WERSJI POBIERAKA" -ForegroundColor red
                 Remove-Item $path_to_temp -Force -Recurse
             }
 
         if ( $instal_or_not -eq 1 )
             {
+                Write-Host ""
+                SLEEP 1
                 "NO TO INSTALJUEMY"
                 Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1
+                Write-Host ""
+                SLEEP 1
                 "POBIERAK ZOSTAL UAKTUALNIONY!!"
                 Remove-Item $path_to_temp -Force -Recurse
+                Write-Host ""
+                SLEEP 1
                 "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
+                Write-Host ""
                 SLEEP 6
                 Start-Process $pobierakbat_main_dir\pobierak.bat         
                 
             }
         else
             {
+                Write-Host ""
+                SLEEP 1
                 "OBECNA WERSJA TO: $version_present "
             }
 
@@ -273,7 +349,8 @@ Function updates_menu(){
                 {
                     Write-Host "ffmpeg Folder Doesn't Exists"
                 }
-
+        Write-Host ""
+        SLEEP 1
         Write-Host "SCIAGANIE KONWERTERA Z REPOZYTORIUM GITHUB.. TO MOZE TROCHE POTRWAC OK KILKU MINUT. OTWORZ BROWAR I CIERPLIWOSCI ;)"
 
         curl -o $recources_main_dir\ffmpeg.zip https://github.com/GyanD/codexffmpeg/releases/download/2022-09-07-git-e4c1272711/ffmpeg-2022-09-07-git-e4c1272711-essentials_build.zip
@@ -283,20 +360,31 @@ Function updates_menu(){
         Get-ChildItem $recources_main_dir -Filter *.zip | Remove-Item
 
         $recources_main_dir_unzipped = "$recources_main_dir\ffmpeg"
+        Write-Host ""
+        Write-Host "SCIAGANIE KONWERTERA ZAKONCZONE!!!" -ForegroundColor green
 
         $unzipped_dir = get-ChildItem -Path $recources_main_dir_unzipped -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Move-Item -Destination $recources_main_dir
+        Write-Host ""
+        SLEEP 1
+        Write-Host "WYPAKOWYWANIE KONWERTERA" -ForegroundColor green
 
         Remove-Item –path $recources_main_dir_unzipped
+        Write-Host ""
+        Write-Host "WYPAKOWYWANIE ZAKONCZONE !" -ForegroundColor green
 
         $unzipped_dir = get-ChildItem -Path $recources_main_dir -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -newname ffmpeg
-        
-        Write-Host "SCIAGANIE KONWERTERA ZAKONCZONE!!!" -ForegroundColor green
+        Write-Host ""
+        SLEEP 1
+        Write-Host "KONWERTER JEST SCIAGNIETY, WYPAKOWANY I GOTOWY DO UZYTKU" -ForegroundColor green
 
     }
 
     Function download_yt_dlp(){
 
         #https://github.com/yt-dlp/yt-dlp
+        Write-Host ""
+        SLEEP 1
+        Write-Host "SCIAGANIE YT-DLP.exe" -ForegroundColor green
         curl -o $recources_main_dir\yt-dlp.exe https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe
         Write-Host "SCIAGANIE YT-DLP ZAKONCZONE!!!" -ForegroundColor green
     }
@@ -321,11 +409,11 @@ Function updates_menu(){
     Write-Host ""
     Write-Host "1: SPRAWDZ CZY JEST DOSTEPNA NOWSZA WERSJA SKRYPTU POBIERAKA." -ForegroundColor Magenta
     Write-Host ""
-    Write-Host "2: POBIERZ BIBLIOTEKE FFMPEG DO KONWERTOWANIA SCIAGNIETYCH MULTIMEDIOW" -ForegroundColor Yellow
+    Write-Host "2: POBIERZ BIBLIOTEKE FFMPEG DO KONWERTOWANIA SCIAGNIETYCH MULTIMEDIOW" -ForegroundColor Magenta
     Write-Host ""
     Write-Host "3: SCIAGNIJ YT-DLP." -ForegroundColor Magenta
     Write-Host ""
-    Write-Host "4: PRZEPROWADZ WSZYSTKIE OPERACJE NA RAZ." -ForegroundColor Magenta
+    Write-Host "4: PRZEPROWADZ WSZYSTKIE OPERACJE NA RAZ." -ForegroundColor Yellow
     Write-Host ""
     Write-Host "EXIT: ABY WYJSC - 0" -ForegroundColor White
     }
@@ -383,7 +471,9 @@ function Show-Menu(){
     Write-Host ""
     Write-Host "4: SCIAGNIJ CALY KANAL." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "5: MENU AKTUALIZACJI" -ForegroundColor Red
+    Write-Host "5: SCIAGNIJ VIDEO I/LUB AUDIO" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "6: MENU AKTUALIZACJI" -ForegroundColor Red
     Write-Host ""
     Write-Host "EXIT: ABY WYJSC - 0" -ForegroundColor White
 }
@@ -396,7 +486,7 @@ do
     Do
         {
             [int]$selection = $(Write-Host "DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI. " -ForegroundColor green -NoNewLine) + $(Write-Host "ZATWIERDZ POPRZEZ ENTER: " -ForegroundColor Yellow -NoNewLine; Read-Host)
-        }until ( $selection -lt 6 )
+        }until ( $selection -lt 7 )
 
     switch ($selection)
     {
@@ -417,6 +507,9 @@ do
                 download_channel
             }
         '5' {
+                download_movie_and_or_music_from_list
+            }
+        '6' {
                 updates_menu
             }
     }
