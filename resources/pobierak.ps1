@@ -1,4 +1,4 @@
-$pobierak_v = "2.5"
+$pobierak_v = "2.51"
 
 $recources_main_dir =  Split-Path $PSCommandPath -Parent
 
@@ -217,7 +217,7 @@ cls
                 {
                     SLEEP 1
                     [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
-                    }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
+				}while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
                     #PATH TO OUTPUT DIR
                     $output_directory = Select-Folder
@@ -312,15 +312,15 @@ Function updates_menu(){
             {
                 Write-Host ""
                 SLEEP 1
-                "NO TO INSTALJUEMY"
+                Write-Host "NO TO INSTALJUEMY"
                 Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1
                 Write-Host ""
                 SLEEP 1
-                "POBIERAK ZOSTAL UAKTUALNIONY!!"
+                Write-Host "POBIERAK ZOSTAL UAKTUALNIONY!!"
                 Remove-Item $path_to_temp -Force -Recurse
                 Write-Host ""
                 SLEEP 1
-                "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
+                Write-Host "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
                 Write-Host ""
                 SLEEP 6
                 Start-Process $pobierakbat_main_dir\pobierak.bat         
@@ -330,7 +330,7 @@ Function updates_menu(){
             {
                 Write-Host ""
                 SLEEP 1
-                "OBECNA WERSJA TO: $version_present "
+                Write-Host "OBECNA WERSJA TO: $version_present "
             }
 
     }
@@ -341,7 +341,6 @@ Function updates_menu(){
         $test_ffmpef_if_exist = "$recources_main_dir\ffmpeg"
             if (Test-Path $test_ffmpef_if_exist) 
                 {
- 
                     Write-Host "ffmpeg Folder Exists"
                     Remove-Item $test_ffmpef_if_exist -Force -Recurse
                 }
@@ -367,14 +366,15 @@ Function updates_menu(){
         Write-Host ""
         SLEEP 1
         Write-Host "WYPAKOWYWANIE KONWERTERA" -ForegroundColor green
-
-        Remove-Item –path $recources_main_dir_unzipped
-        Write-Host ""
+		
+		Remove-Item $recources_main_dir_unzipped -Force -Recurse
+        
         Write-Host "WYPAKOWYWANIE ZAKONCZONE !" -ForegroundColor green
-
+		
         $unzipped_dir = get-ChildItem -Path $recources_main_dir -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -newname ffmpeg
         Write-Host ""
         SLEEP 1
+
         Write-Host "KONWERTER JEST SCIAGNIETY, WYPAKOWANY I GOTOWY DO UZYTKU" -ForegroundColor green
 
     }
@@ -475,7 +475,7 @@ function Show-Menu(){
     Write-Host ""
     Write-Host "6: MENU AKTUALIZACJI" -ForegroundColor Red
     Write-Host ""
-    Write-Host "EXIT: ABY WYJSC - 0" -ForegroundColor White
+    Write-Host "EXIT: ABY WYJSC - 0" #-ForegroundColor White
 }
 
 do
