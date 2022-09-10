@@ -1,4 +1,4 @@
-$pobierak_v = "2.6"
+$pobierak_v = "2.71"
 
 $process_bak_primary_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_primary.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
 $process_bak_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_bak.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
@@ -377,7 +377,7 @@ Function updates_menu(){
                     }
 					
 				$path_2_pob_pri = "$recources_main_dir\pobierak_primary.ps1"
-				If (!(test-path -PathType container $path_2_pob_pri))
+				If (Test-Path $path_2_pob_pri)
 					{
 						if (( $process_bak_id -eq $null -and $process_bak_primary_id -eq $null ))
 							{
@@ -396,12 +396,20 @@ Function updates_menu(){
                 SLEEP 1
                 Write-Host "POBIERAK ZOSTAL UAKTUALNIONY!!"
                 Remove-Item $path_to_temp -Force -Recurse
-                Write-Host ""
-                SLEEP 1
-                Write-Host "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
-                Write-Host ""
-                SLEEP 6
-                Start-Process $pobierakbat_main_dir\pobierak.bat         
+				
+				if ( $selection -eq 4 )
+					{
+						write-host " "
+					}
+				else
+					{
+						Write-Host ""
+						SLEEP 1
+						Write-Host "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
+						Write-Host ""
+						SLEEP 5
+						Start-Process $pobierakbat_main_dir\pobierak.bat
+					}
                 
             }
         else
@@ -419,7 +427,6 @@ Function updates_menu(){
         $test_ffmpef_if_exist = "$recources_main_dir\ffmpeg"
             if (Test-Path $test_ffmpef_if_exist) 
                 {
-                    Write-Host "ffmpeg Folder Exists"
                     Remove-Item $test_ffmpef_if_exist -Force -Recurse
                 }
             else
@@ -474,6 +481,21 @@ Function updates_menu(){
         download_ffmpeg
 
         download_yt_dlp
+		
+		if ( $selection -eq 4 )
+			{
+				
+				Write-Host ""
+				SLEEP 1
+				Write-Host "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
+				Write-Host ""
+				SLEEP 5
+				Start-Process $pobierakbat_main_dir\pobierak.bat				
+			}
+		else
+			{
+				write-host " "		
+			}
 
     }
 
