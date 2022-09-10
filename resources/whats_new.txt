@@ -1,2 +1,2 @@
-wersja 2.7
+wersja 2.71
 Dodana funkcja backup po nieudanej aktualizacji pobieraka.
