@@ -439,21 +439,24 @@ Function updates_menu(){
 
         curl -o $recources_main_dir\ffmpeg.zip https://github.com/GyanD/codexffmpeg/releases/download/2022-09-07-git-e4c1272711/ffmpeg-2022-09-07-git-e4c1272711-essentials_build.zip
 
+	SLEEP 1
+        Write-Host ""
+        Write-Host "SCIAGANIE KONWERTERA ZAKONCZONE!!!" -ForegroundColor green
+	Write-Host ""
+        SLEEP 1
+	Write-Host "WYPAKOWYWANIE KONWERTERA W TOKU" -ForegroundColor green
+	
         Get-ChildItem $recources_main_dir -Filter *.zip | Expand-Archive -DestinationPath $recources_main_dir\ffmpeg -Force
 
         Get-ChildItem $recources_main_dir -Filter *.zip | Remove-Item
 
         $recources_main_dir_unzipped = "$recources_main_dir\ffmpeg"
-        Write-Host ""
-        Write-Host "SCIAGANIE KONWERTERA ZAKONCZONE!!!" -ForegroundColor green
+	
 
         $unzipped_dir = get-ChildItem -Path $recources_main_dir_unzipped -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Move-Item -Destination $recources_main_dir
-        Write-Host ""
-        SLEEP 1
-        Write-Host "WYPAKOWYWANIE KONWERTERA" -ForegroundColor green
-		
-		Remove-Item $recources_main_dir_unzipped -Force -Recurse
         
+        Remove-Item $recources_main_dir_unzipped -Force -Recurse
+        Write-Host ""
         Write-Host "WYPAKOWYWANIE ZAKONCZONE !" -ForegroundColor green
 		
         $unzipped_dir = get-ChildItem -Path $recources_main_dir -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -newname ffmpeg
