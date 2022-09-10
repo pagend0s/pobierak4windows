@@ -1,9 +1,11 @@
-$pobierak_v = "2.751"
+$pobierak_v = "2.7511"
 
 $recources_main_dir = $null
 $pobierakbat_main_dir = $null
 $yt_dlp = $null
 $ffmpeg = $null
+$process_bak_primary_id = $null
+$process_bak_id = $null
 
 $process_bak_primary_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_primary.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
 $process_bak_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_bak.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
