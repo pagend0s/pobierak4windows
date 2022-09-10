@@ -431,7 +431,7 @@ Function updates_menu(){
                 }
             else
                 {
-                    Write-Host "ffmpeg Folder Doesn't Exists"
+                    Write-Host " "
                 }
         Write-Host ""
         SLEEP 1
