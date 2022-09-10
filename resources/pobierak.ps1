@@ -1,4 +1,4 @@
-$pobierak_v = "2.71"
+$pobierak_v = "2.75"
 
 $process_bak_primary_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_primary.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
 $process_bak_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_bak.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
@@ -72,7 +72,7 @@ function Unzip
 }
 
 Function warning_select_file(){
-    [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms');
+    [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null;
     [System.Windows.Forms.MessageBox]::Show('WYBIERZ DOCELOWY PLIK Z WKLEJONYMI LINKAMI Z YOUTUBE','WARNING')
 }
 
@@ -80,9 +80,9 @@ Function Select-Folder
 {
     param([string]$Description="Select Folder",[string]$RootFolder="Desktop")
 
-    [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null     
+    [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null      
 
-        $objForm = New-Object System.Windows.Forms.FolderBrowserDialog
+        $objForm = New-Object System.Windows.Forms.FolderBrowserDialog 
         $Description = "WYBIERZ FOLDER DOCELOWY DLA SCIAGNIETYCH SONGOW"
         $objForm.Rootfolder = $RootFolder
         $objForm.Description = $Description
@@ -241,62 +241,118 @@ Function download_channel(){
 #5
 Function download_movie_and_or_music_from_list(){
 cls
-    do
+	do
         {
-            SLEEP 1
-            Write-Host ""
-            [string]$s = $(Write-Host "PODAJ KOMPLETNY LINK Z YOUTUBE NP (https://www.youtube.com/watch?v=XmaaSK19jGQ)" -ForegroundColor green) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor green) + $(Write-Host "W CELU PRZEZWANIA WPISZ q i WSCISNIJ enter: " -ForegroundColor red; Read-Host)
-            if ( $s -eq "q" )
-                {
-                }else{$s >> "$recources_main_dir\songs.txt"}          
+			SLEEP 1
+			write-host ""
+            Write-Host "CHCESZ SCIAGNAC VIDEO/AUDO Z JUZ PRZYGOTWANEJ LISTY CZY WPISAC KILKA LINKOW W CONSOLE ? " -ForegroundColor Yellow
+            [int]$list_console = Read-Host "PODAJ cyfre: 1 dla LISTA ; 2 dla CONSOLA:"
+        }while(($list_console -ne 1  ) -and ($list_console -ne 2))
 
-        }until($s -eq "q"  )
+	if ( $list_console -eq 1)
+		{
+			warning_select_file
+			$selected_file_var = Select-File
 
-    SLEEP 1
-    do
+			$d = Get-Content -Path $selected_file_var
+		}
+	else
+		{
+			do
+				{
+					SLEEP 1
+					Write-Host ""
+					[string]$s = $(Write-Host "PODAJ KOMPLETNY LINK Z YOUTUBE NP (https://www.youtube.com/watch?v=XmaaSK19jGQ)" -ForegroundColor green) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor green) + $(Write-Host "W CELU PRZEZWANIA WPISZ q i WSCISNIJ enter: " -ForegroundColor red; Read-Host)
+					if ( $s -eq "q" )
+						{
+							}else{$s >> "$recources_main_dir\songs.txt"}          
+
+			}until($s -eq "q"  )
+		}
+	$path2song_list_single = "$recources_main_dir\songs.txt"
+	If (Test-Path $path2song_list_single)
+		{
+			$c = Get-Content -Path "$recources_main_dir\songs.txt" 
+		}
+	else
+		{
+			write-host " "
+		}
+	
+	do
+		{
+			SLEEP 1 
+			[string]$viedo_format = $(Write-Host "W JAKIM FORMACIE MA BYC SCIAGNIETY VIDEO." -ForegroundColor green ) + $(Write-Host " PRAWIDLOWE TO: avi ; mp4 " -ForegroundColor yellow ; Read-Host)
+		}while(($viedo_format -ne "avi") -and ($viedo_format -ne "mp4"))
+		
+	do
         {
+			SLEEP 1
+			write-host ""
             Write-Host "CZY CHCESZ RAZEM Z VIDEO SCIAGNAC ROWNIEZ SCIEZKE AUDIO ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
             [int]$audio_yes_no = Read-Host "Enter number from 1-2"
         }while(($audio_yes_no -ne 1  ) -and ($audio_yes_no -ne 2))
-
-    $c = Get-Content -Path "$recources_main_dir\songs.txt" 
-
-    #PATH TO YT-DLP
-    $cmd = "$yt_dlp"
     
     if ( $audio_yes_no -eq 1 )
         {
             do
                 {
                     SLEEP 1
-                    [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
+					[string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE FORMATY TO: 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
 				}while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
+		}
+	else
+		{
+			write-host ""
+		}
+		
 
-                    #PATH TO OUTPUT DIR
-                    $output_directory = Select-Folder
-                    Start explorer.exe $output_directory
-                     
-            ForEach ($a in $c) 
+	#PATH TO OUTPUT DIR
+	$output_directory = Select-Folder
+	Start explorer.exe $output_directory
+					
+	#PATH TO YT-DLP
+    $cmd = "$yt_dlp"
+	
+	if ( $list_console -eq 1)
+	{
+		if ( $audio_yes_no -eq 1 )
+			{
+				ForEach ($a in $d) 
                 {
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format mp4 --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
-
-
-        }
-    else
-        {
-        #PATH TO OUTPUT DIR
-        $output_directory = Select-Folder
-        Start explorer.exe $output_directory
-        ForEach ($a in $c) 
+			}
+		else
+			{
+				ForEach ($a in $d) 
                 {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format mp4 --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
-
-        }
-
-    Remove-Item -Path "$recources_main_dir\songs.txt"
+			}
+	}
+	else
+	{
+		if ( $audio_yes_no -eq 1 )
+			{
+				ForEach ($a in $c) 
+                {
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+                }
+			}
+		else
+			{
+				ForEach ($a in $c)
+                {
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
+                }
+			}
+        
+	Remove-Item -Path "$recources_main_dir\songs.txt"
+	}
+    
 
     write-host ""
     Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
