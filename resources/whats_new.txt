@@ -1,3 +1,2 @@
-wersja 2.55
-Poprawiona opcja 5, wyeliminowanie wersji dla głuchoniemych
-Dodane info na temat brakujacych bibliotek do konwersji oraz yt-dlp.exe
+wersja 2.7
+Dodana funkcja backup po nieudanej aktualizacji pobieraka.
