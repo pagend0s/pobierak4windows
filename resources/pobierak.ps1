@@ -483,4 +483,77 @@ Function updates_menu(){
                     '3' 
                         {
                             download_yt_dlp
-              
+                        }
+                    '4' 
+                        {
+                            download_all_at_once
+                        }
+
+                }
+            pause
+        }until ( $selection -eq 0 )
+
+}
+
+function Show-Menu(){
+    param (
+            [string]$Title = 'Pobierak'
+    )
+
+    Clear-Host
+    Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "Pobierak wersja: " ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
+    test_resources
+    Write-Host ""
+    Write-Host "1: SCIAGNIJ ILE CHCESZ POJEDYNCZYCH LINKOW." -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "2: SCIAGNIJ PIOSENKI Z LINKOW ZNAJDUJACYCH SIE W PLIKU." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "3: SCIAGNIJ CALA PLAYLISTE." -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "4: SCIAGNIJ CALY KANAL." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "5: SCIAGNIJ VIDEO I/LUB AUDIO" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "6: MENU AKTUALIZACJI" -ForegroundColor Red
+    Write-Host ""
+    Write-Host "EXIT: ABY WYJSC - 0" #-ForegroundColor White
+}
+
+do
+ {
+    Show-Menu
+    SLEEP 1
+    write-host ""
+    Do
+        {
+            [int]$selection = $(Write-Host "DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI. " -ForegroundColor green -NoNewLine) + $(Write-Host "ZATWIERDZ POPRZEZ ENTER: " -ForegroundColor Yellow -NoNewLine; Read-Host)
+        }until ( $selection -lt 7 )
+
+    switch ($selection)
+    {
+        '1' 
+            {
+                download_song
+            } 
+    
+        '2' 
+            {
+                download_from_list
+            } 
+
+        '3' {
+                download_playlist
+            }
+        '4' {
+                download_channel
+            }
+        '5' {
+                download_movie_and_or_music_from_list
+            }
+        '6' {
+                updates_menu
+            }
+    }
+    pause
+ }
+ until ( $selection -eq 0 )
