@@ -1,2 +1,3 @@
-Pobierak werja 2.52
-Dodany parametr --no-playlist w celu unikniecia sciagania calej playlisty jesli link video do niej prowadzi
+wersja 2.55
+Poprawiona opcja 5, wyeliminowanie wersji dla głuchoniemych
+Dodane info na temat brakujacych bibliotek do konwersji oraz yt-dlp.exe
