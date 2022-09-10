@@ -1,4 +1,5 @@
-wersja 2.75
+wersja 2.7511
 -Dodanie do opcji 5 mozliwosci sciagania z juz wczesniej zestawionej listy z pliku
 -Dodanie wyboru formatu video pomiedzy mp4 i avi
+-czyszczenie podstawowych var po otwarciu nowej instancji pobieraka
 -zdrowko klepka
