@@ -1,2 +1,4 @@
-wersja 2.71
-Dodana funkcja backup po nieudanej aktualizacji pobieraka.
+wersja 2.75
+-Dodanie do opcji 5 mozliwosci sciagania z juz wczesniej zestawionej listy z pliku
+-Dodanie wyboru formatu video pomiedzy mp4 i avi
+-zdrowko klepka
