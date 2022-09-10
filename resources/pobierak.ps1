@@ -1,4 +1,7 @@
-$pobierak_v = "2.55"
+$pobierak_v = "2.6"
+
+$process_bak_primary_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_primary.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
+$process_bak_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_bak.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
 
 $recources_main_dir =  Split-Path $PSCommandPath -Parent
 
@@ -8,13 +11,23 @@ $yt_dlp = "$recources_main_dir\yt-dlp.exe"
 
 $ffmpeg = "$recources_main_dir\ffmpeg\bin\ffmpeg.exe"
 
-Function test_resources(){
+Function internal_info(){
 
 $recources_test= @()
 $recources_test[0]
 
 $test_resource_ffmpeg_if_exist = "$recources_main_dir\ffmpeg"
 $test_resource_yt_dlp_if_exist = "$recources_main_dir\yt-dlp.exe"
+
+if (( $process_bak_id -eq $null -and $process_bak_primary_id -eq $null ))
+	{
+		$critical_update_error = " "		
+	}
+else
+	{
+		$critical_update_error = ( Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "NASTAPIL KRYTYCZNY PROBLEM Z AKTUALIZACJA. SKONTAKTUJ SIE Z PAGEND0SEM " ) -ForegroundColor RED )
+		$recources_test += ," $critical_update_error"
+	}
 
 if (Test-Path $test_resource_ffmpeg_if_exist) 
                 {
@@ -353,7 +366,32 @@ Function updates_menu(){
                 Write-Host ""
                 SLEEP 1
                 Write-Host "NO TO INSTALJUEMY"
+
+                if ( $process_bak_id -eq $null )
+                    {
+                        echo ""
+                    }
+                else
+                    {
+                        Copy-Item  -Path $recources_main_dir\pobierak_bak.ps1 $recources_main_dir\pobierak_primary.ps1
+                    }
+					
+				$path_2_pob_pri = "$recources_main_dir\pobierak_primary.ps1"
+				If (!(test-path -PathType container $path_2_pob_pri))
+					{
+						if (( $process_bak_id -eq $null -and $process_bak_primary_id -eq $null ))
+							{
+								Remove-Item $recources_main_dir\pobierak_primary.ps1 -Force 
+							}
+					}
+				else
+					{
+						write-host " "
+					}
+                
+                Copy-Item  -Path $recources_main_dir\pobierak.ps1 $recources_main_dir\pobierak_bak.ps1
                 Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1
+                Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\pobierak.bat $pobierakbat_main_dir\pobierak.bat
                 Write-Host ""
                 SLEEP 1
                 Write-Host "POBIERAK ZOSTAL UAKTUALNIONY!!"
@@ -502,7 +540,7 @@ function Show-Menu(){
 
     Clear-Host
     Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "Pobierak wersja: " ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
-    test_resources
+    internal_info
     Write-Host ""
     Write-Host "1: SCIAGNIJ ILE CHCESZ POJEDYNCZYCH LINKOW." -ForegroundColor Magenta
     Write-Host ""
