@@ -1,4 +1,4 @@
-$pobierak_v = "2.8"
+$pobierak_v = "2.81"
 
 $logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
 $recources_main_dir = $null
@@ -76,6 +76,20 @@ Function warning_select_file(){
     [System.Windows.Forms.MessageBox]::Show('WYBIERZ DOCELOWY PLIK Z WKLEJONYMI LINKAMI Z YOUTUBE','WARNING')
 }
 
+function Get-FreeSpace {
+    Param(
+        $path = $output_directory
+    );
+
+    [double]$free = Get-WmiObject Win32_Volume -Filter "DriveType=3" |
+            Where-Object { $path -like "$($_.Name)*" } |
+            Sort-Object Name -Desc |
+            Select-Object -First 1 FreeSpace |
+            ForEach-Object { $_.FreeSpace / (1024*1024*1024) }
+            
+    return ([math]::round($free,2))
+}
+
 Function Select-Folder
 {
     param([string]$Description="Select Folder",[string]$RootFolder="Desktop")
@@ -142,19 +156,27 @@ cls
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
-    $c = Get-Content -Path "$recources_main_dir\songs.txt" 
-
-    #PATH TO YT-DLP
-    $cmd = "$yt_dlp"
+    $c = Get-Content -Path "$recources_main_dir\songs.txt"
+	
+	$lines_var = Get-Content "$recources_main_dir\songs.txt" 
+	$lines_var = $lines_var.trim() -ne ""
+	[int]$lines_var = $lines_var.Count
 
     #PATH TO OUTPUT DIR
     $output_directory = Select-Folder
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
 
     Start explorer.exe $output_directory
-    
-    
+	[int]$lines_var+=1
+    [int]$xyz=0
     ForEach ($a in $c) 
         {
+			[int]$xyz++
+			[int]$lines_var-= 1
+			write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
             Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
         }
 
@@ -172,6 +194,7 @@ Function download_from_list(){
     $selected_file_var = Select-File
 
     $d = Get-Content -Path $selected_file_var
+	$d = $d.trim() -ne ""
 
     do
         {
@@ -180,20 +203,27 @@ Function download_from_list(){
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
-    #PATH TO YT-DLP
-    $cmd = "$yt_dlp"
-
     #PATH TO OUTPUT DIR
-    $output_directory = Select-Folder
+    $output_directory = Select-Folder	
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
 
     Start explorer.exe $output_directory
-    
+	
+	$lines_var = Get-Content "$selected_file_var" 
+	$lines_var = $lines_var.trim() -ne ""
+	[int]$lines_var = $lines_var.Count
+	
+    [int]$lines_var+=1
     $xyz=0
     ForEach ($h in $d) 
         {
+			[int]$lines_var-= 1
 			$xyz++
 			write-host " "
-			write-host "ZACIAGANIE AUDIO LINK NR: $xyz" -ForegroundColor yellow
+			write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
             Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $h"
         }
 
@@ -215,11 +245,12 @@ Function download_playlist(){
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
-     #PATH TO YT-DLP
-    $cmd = "$yt_dlp"
-
     #PATH TO OUTPUT DIR
     $output_directory = Select-Folder
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
 
     Start explorer.exe $output_directory
 
@@ -244,12 +275,13 @@ Function download_channel(){
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
-    $cmd = "$yt_dlp"
-
     #PATH TO OUTPUT DIR
-    $output_directory = Select-Folder
-
+    $output_directory = Select-Folder	
     Start explorer.exe $output_directory
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
 
     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location ""$ffmpeg"" --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $channel_ID_yt "
 
@@ -283,6 +315,7 @@ cls
 			$selected_file_var = Select-File
 
 			$d = Get-Content -Path $selected_file_var
+			$d = $d.trim() -ne ""
 		}
 	else
 		{
@@ -300,7 +333,7 @@ cls
 	$path2song_list_single = "$recources_main_dir\songs.txt"
 	If (Test-Path $path2song_list_single)
 		{
-			$c = Get-Content -Path "$recources_main_dir\songs.txt" 
+			$c = Get-Content -Path "$recources_main_dir\songs.txt"
 		}
 	else
 		{
@@ -340,47 +373,68 @@ cls
 	#PATH TO OUTPUT DIR
 	$output_directory = Select-Folder
 	Start explorer.exe $output_directory
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
 					
-	#PATH TO YT-DLP
-    $cmd = "$yt_dlp"
-	$xyz=0
+	
 	if ( $list_console -eq 1)
 	{
+		$xyz=0
+		$lines_var = Get-Content "$selected_file_var" 
+		$lines_var = $lines_var.trim() -ne ""
+		[int]$lines_var = $lines_var.Count	
+		[int]$lines_var+=1
+		
 		if ( $audio_yes_no -eq 1 )
 			{
+				
+				
 				ForEach ($a in $d) 
                 {
+					[int]$lines_var-= 1
 					$xyz++
 					write-host " "
-					write-host "ZACIAGANIE AUDIO LINK NR: $xyz" -ForegroundColor yellow
+					write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
 					write-host " "
-					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
 					write-host " "
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
 				}
 			}
 		if ( $audio_yes_no -eq 2 )
-			{
+			{			
 				ForEach ($a in $d) 
                 {
-					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+					[int]$lines_var-= 1
+					$xyz++
+					write-host " "
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
+					write-host " "
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
 			}
 	}
 	if ( $list_console -eq 2)
 	{
+		$lines_var = Get-Content "$path2song_list_single" 
+		$lines_var = $lines_var.trim() -ne ""
+		[int]$lines_var = $lines_var.Count	
+		[int]$lines_var+=1
+		$xyz=0
 		if ( $audio_yes_no -eq 1 )
 			{
 				ForEach ($a in $c) 
                 {
+					[int]$lines_var-= 1
 					$xyz++
 					write-host " "
-					write-host "ZACIAGANIE AUDIO LINK NR: $xyz" -ForegroundColor yellow
+					write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
 					write-host " "
-					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
 					write-host " "
 					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
@@ -388,8 +442,12 @@ cls
 		if ( $audio_yes_no -eq 2 )
 			{
 				ForEach ($a in $c)
-                {					
-					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+                {
+					[int]$lines_var-= 1
+					$xyz++
+					write-host " "
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
+					write-host " "
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"					
 				}
 			}
@@ -454,8 +512,7 @@ cls
 		{
 			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Google\Chrome\User Data\Default"
 			#$latest_profile = Get-ChildItem -Path $dir_2_fox_profile | Sort-Object LastAccessTime -Descending | Select-Object -First 1
-			$latest_profile = $dir_4_borowser_cookies
-		
+			$latest_profile = $dir_4_borowser_cookies		
 		}
 	
 	do
@@ -495,7 +552,7 @@ cls
 		}
 	else
 		{
-			write-host " "
+			write-host ""
 		}
 	
 	do
@@ -526,15 +583,16 @@ cls
 		{
 			write-host ""
 		}
-		
-	Write-host "LISTA CZY PLIK ? $list_console "
+
 	#PATH TO OUTPUT DIR
 	$output_directory = Select-Folder
 	Start explorer.exe $output_directory
-					
-	#PATH TO YT-DLP
-    $cmd = "$yt_dlp"
 	
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
+					
 	if ( $list_console -eq 1)
 	{
 		if ( $audio_yes_no -eq 1 )
@@ -559,8 +617,12 @@ cls
 			{
 				ForEach ($x in $selected_file_var_list)
                 {
-					write-host "AUDIO NO 1"
+					write-host " "
+					write-host "SCIAGANIE VIDEO W TOKU.." -ForegroundColor yellow
+					write-host " "
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+					write-host " "
+					write-host "SCIAGANIE VIDEO ZAKONCZONE! " -ForegroundColor yellow
                 }
 			}
 	}
@@ -861,6 +923,22 @@ Function updates_menu(){
 
 }
 
+function youtube_dlp_dev(){
+cls
+	Write-Host "WITAJ W POBIERAKU DLA AMBITNYCH ;)" -ForegroundColor green
+	Write-Host "TUTAJ MOZESZ WPROWADZAC KOMENDY BEZPOSREDNIO DLA PROGRAMU YOUTUBE-DLP." -ForegroundColor green
+	Write-Host "KOMPLETNA LISTA KOMEND ZNAJDUJE SIE NA STRONIE PROJEKTU: https://github.com/yt-dlp/yt-dlp LUB PO WPISANIU ARGUMENTU --help " -ForegroundColor green
+
+	do
+		{
+			write-host ""
+			SLEEP 1
+			$arguments = $(Write-Host "PODAJ ZESTAW ARGUMENTOW I ZATWIERDZ POPRZEZ ENTER." -ForegroundColor green -NoNewLine) + $(Write-Host "ABY PRZERWAC WPISZ: quit" -ForegroundColor RED ; Read-Host)
+			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList """$arguments"""
+				}until($arguments -eq "quit")
+	Write-Host "POBIERAK DLA AMBITNYCH ZAKONCZONY." -ForegroundColor green
+}
+
 function Show-Menu(){
     param (
             [string]$Title = 'Pobierak'
@@ -895,7 +973,7 @@ do
     Do
         {
             [int]$selection = $(Write-Host "DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI. " -ForegroundColor green -NoNewLine) + $(Write-Host "ZATWIERDZ POPRZEZ ENTER: " -ForegroundColor Yellow -NoNewLine; Read-Host)
-        }until ( $selection -lt 8 )
+        }until ( $selection -lt 9 )
 
     switch ($selection)
     {
@@ -923,6 +1001,9 @@ do
             }
 		'7' {
                 updates_menu
+            }
+		'8' {
+                youtube_dlp_dev
             }
 						
     }
