@@ -1,5 +1,6 @@
-$pobierak_v = "2.7511"
+$pobierak_v = "2.8"
 
+$logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
 $recources_main_dir = $null
 $pobierakbat_main_dir = $null
 $yt_dlp = $null
@@ -70,16 +71,8 @@ Return ,$recources_test
 
 }
 
-Add-Type -AssemblyName System.IO.Compression.FileSystem
-function Unzip
-{
-    param([string]$zipfile, [string]$outpath)
-
-    [System.IO.Compression.ZipFile]::ExtractToDirectory($zipfile, $outpath)
-}
-
 Function warning_select_file(){
-    [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null;
+    [System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | out-null;
     [System.Windows.Forms.MessageBox]::Show('WYBIERZ DOCELOWY PLIK Z WKLEJONYMI LINKAMI Z YOUTUBE','WARNING')
 }
 
@@ -87,17 +80,16 @@ Function Select-Folder
 {
     param([string]$Description="Select Folder",[string]$RootFolder="Desktop")
 
-    [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null      
+ [System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null     
 
-        $objForm = New-Object System.Windows.Forms.FolderBrowserDialog 
-        $Description = "WYBIERZ FOLDER DOCELOWY DLA SCIAGNIETYCH SONGOW"
+   $objForm = New-Object System.Windows.Forms.FolderBrowserDialog
+		$Description = "WSKARZ MIEJSCE DOCELOWE DLA SCIAGNIETYCH MULTIMEDIOW"
         $objForm.Rootfolder = $RootFolder
         $objForm.Description = $Description
         $Show = $objForm.ShowDialog()
-        
         If ($Show -eq "OK")
-        {                    
-            Return $objForm.SelectedPath                  
+        {
+            Return $objForm.SelectedPath
         }
         Else
         {
@@ -122,6 +114,16 @@ Function Select-Folder
 #1
 function download_song(){
 cls
+	$path2song_list_single = "$recources_main_dir\songs.txt"
+	If (Test-Path $path2song_list_single)
+		{
+			Remove-Item -Path $path2song_list_single
+		}
+	else
+		{
+			write-host " "
+		}
+		
     do
         {
             SLEEP 1
@@ -132,9 +134,11 @@ cls
                 }else{$s >> "$recources_main_dir\songs.txt"}          
 
         }until($s -eq "q"  )
-SLEEP 1
+
     do
-        {
+        {	
+			Write-Host ""
+			SLEEP 1
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
@@ -151,7 +155,7 @@ SLEEP 1
     
     ForEach ($a in $c) 
         {
-            Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --output ""$output_directory""\%(title)s.%(ext)s $a"
+            Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
         }
 
     Remove-Item -Path "$recources_main_dir\songs.txt"
@@ -169,10 +173,10 @@ Function download_from_list(){
 
     $d = Get-Content -Path $selected_file_var
 
-    SLEEP 1
-
     do
         {
+			Write-Host ""
+			SLEEP 1
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
@@ -184,10 +188,13 @@ Function download_from_list(){
 
     Start explorer.exe $output_directory
     
-    
+    $xyz=0
     ForEach ($h in $d) 
         {
-            Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --output ""$output_directory""\%(title)s.%(ext)s $h"
+			$xyz++
+			write-host " "
+			write-host "ZACIAGANIE AUDIO LINK NR: $xyz" -ForegroundColor yellow
+            Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $h"
         }
 
         write-host ""
@@ -196,13 +203,15 @@ Function download_from_list(){
 #3
 Function download_playlist(){
     cls
-    [string]$playlist_ID_yt = $(Write-Host "W CELU SCIAGNIECIA CALEY PLYLISTY NIEZBEDNY JEST JEJ IDENTYFIKATOR" -ForegroundColor yellow) + $(Write-Host "IDENTYFIKATOR PLAYLISTY ZOSTAL ZAZNACZONY NA ZIELONO W PRZYKLADOWYM LINKU PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor yellow ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green)  + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CZESC ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow; Read-Host)
+	Write-Host ""
+	SLEEP 1
+    [string]$playlist_ID_yt = $(Write-Host "W CELU SCIAGNIECIA CALEY PLYLISTY NIEZBEDNY JEST JEJ IDENTYFIKATOR" -ForegroundColor yellow) + $(Write-Host "IDENTYFIKATOR PLAYLISTY ZOSTAL ZAZNACZONY NA ZIELONO W PRZYKLADOWYM LINKU PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green)  + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CZESC ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow; Read-Host)
     $quality = $null
 
-    SLEEP 1
-
     do
-        {
+        {	
+			Write-Host ""
+			SLEEP 1
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
@@ -214,7 +223,7 @@ Function download_playlist(){
 
     Start explorer.exe $output_directory
 
-    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s $playlist_ID_yt "
+    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s $playlist_ID_yt "
 
     write-host ""
     Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
@@ -223,15 +232,15 @@ Function download_playlist(){
 Function download_channel(){
 
     cls
+	Write-Host ""
+	SLEEP 1
     [string]$channel_ID_yt = $(Write-Host "W CELU SCIAGNIECIA CALEGO KANALU  NIEZBEDNY JEST LINK ZAWIERAJACY PODFOLDER --- channel --- W LINKU" -ForegroundColor yellow) + $(Write-Host "PRZYKLADOWY LINK ZNAJDUJE SIE PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "channel" -NoNewline -ForegroundColor green) + $(Write-Host "/UC0C1W6nV0Rv6QkvAAE_AgXg" -ForegroundColor Magenta ) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CALY LINK Z PODFOLDEREM --- channel --- Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow; Read-Host)
     $quality = $null
 
-    Write-Host ""
-
-    SLEEP 1
-
      do
         {
+			Write-Host ""
+			SLEEP 1
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
@@ -242,18 +251,30 @@ Function download_channel(){
 
     Start explorer.exe $output_directory
 
-    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location $ffmpeg --audio-quality $quality --output ""$output_directory""\%(title)s.%(ext)s $channel_ID_yt "
+    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location ""$ffmpeg"" --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $channel_ID_yt "
 
 }
+
 #5
 Function download_movie_and_or_music_from_list(){
 cls
+
+	$path2song_list_single = "$recources_main_dir\songs.txt"
+	If (Test-Path $path2song_list_single)
+		{
+			Remove-Item -Path $path2song_list_single
+		}
+	else
+		{
+			write-host " "
+		}
+		
 	do
         {
 			SLEEP 1
 			write-host ""
             Write-Host "CHCESZ SCIAGNAC VIDEO/AUDO Z JUZ PRZYGOTWANEJ LISTY CZY WPISAC KILKA LINKOW W CONSOLE ? " -ForegroundColor Yellow
-            [int]$list_console = Read-Host "PODAJ cyfre: 1 dla LISTA ; 2 dla CONSOLA:"
+            [int]$list_console = Read-Host "PODAJ CYFRE: 1 = LISTA ; 2 = CONSOLA:"
         }while(($list_console -ne 1  ) -and ($list_console -ne 2))
 
 	if ( $list_console -eq 1)
@@ -288,8 +309,9 @@ cls
 	
 	do
 		{
-			SLEEP 1 
-			[string]$viedo_format = $(Write-Host "W JAKIM FORMACIE MA BYC SCIAGNIETY VIDEO." -ForegroundColor green ) + $(Write-Host " PRAWIDLOWE TO: avi ; mp4 " -ForegroundColor yellow ; Read-Host)
+			SLEEP 1
+			write-host ""
+			$viedo_format = $(Write-Host "W JAKIM FORMACIE MA BYC SCIAGNIETY VIDEO." -ForegroundColor green ) + $(Write-Host " PRAWIDLOWE TO: avi ; mp4 " -ForegroundColor yellow ; Read-Host)
 		}while(($viedo_format -ne "avi") -and ($viedo_format -ne "mp4"))
 		
 	do
@@ -304,6 +326,7 @@ cls
         {
             do
                 {
+					write-host ""
                     SLEEP 1
 					[string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE FORMATY TO: 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
 				}while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
@@ -320,41 +343,55 @@ cls
 					
 	#PATH TO YT-DLP
     $cmd = "$yt_dlp"
-	
+	$xyz=0
 	if ( $list_console -eq 1)
 	{
 		if ( $audio_yes_no -eq 1 )
 			{
 				ForEach ($a in $d) 
                 {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
-                }
+					$xyz++
+					write-host " "
+					write-host "ZACIAGANIE AUDIO LINK NR: $xyz" -ForegroundColor yellow
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+					write-host " "
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+				}
 			}
-		else
+		if ( $audio_yes_no -eq 2 )
 			{
 				ForEach ($a in $d) 
                 {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
 			}
 	}
-	else
+	if ( $list_console -eq 2)
 	{
 		if ( $audio_yes_no -eq 1 )
 			{
 				ForEach ($a in $c) 
                 {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg --format bestaudio --audio-format mp3 --extract-audio --audio-quality $quality --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+					$xyz++
+					write-host " "
+					write-host "ZACIAGANIE AUDIO LINK NR: $xyz" -ForegroundColor yellow
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+					write-host " "
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+					write-host " "
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
                 }
 			}
-		else
+		if ( $audio_yes_no -eq 2 )
 			{
 				ForEach ($a in $c)
-                {
-                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location $ffmpeg -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format $viedo_format --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
-                }
+                {					
+					write-host "ZACIAGANIE VIDEO LINK NR: $xyz" -ForegroundColor yellow
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"					
+				}
 			}
         
 	Remove-Item -Path "$recources_main_dir\songs.txt"
@@ -366,6 +403,209 @@ cls
 
 }
 #6
+function download_from_cookie(){
+cls
+	$path2song_list_single = "$recources_main_dir\songs.txt"
+	If (Test-Path $path2song_list_single)
+		{
+			Remove-Item -Path $path2song_list_single
+		}
+	else
+		{
+			write-host " "
+		}
+
+	do
+        {
+			SLEEP 1
+			write-host ""
+            Write-Host "PODAJ JAKA PRZEGLADARKE UZYWASZ, CHODZI O TA GDZIE AKTUALNIE ZNAJDUJE SIE PLAYLISTA Z ZALOGOWANEGO KONTA YOUTUBE." -ForegroundColor Yellow
+			SLEEP 1
+			write-host ""
+			Write-Host "OBSLUGIWANE PRZEGLADARKI TO: chrome ; edge ; firefox." -ForegroundColor Yellow
+			SLEEP 1
+			write-host ""
+			Write-Host "! PRZY WYBORZE PRZEGLADARKI ZALECA SIE ROZWAGE. POBIERAK (YOUTUBE-DLP) BEDZIE MIAL DOSTEP DO CALEGO PROFILU! " -ForegroundColor Red
+			SLEEP 1
+			write-host ""
+			Write-Host "! ZALECAM ZALOGOWANIE SIE DO YOUTUBE NA PRZEGLADARCE KTOREJ NIE UZYWA SIE NA CODZIEN I WSKAZANIE WLASNIE JEJ! " -ForegroundColor Red
+			SLEEP 1
+			write-host ""
+            $web_browser = Read-Host "Podaj poprawna wartosc: chrome LUB edge LUB firefox : "
+        }while(($web_browser -ne 'chrome')  -and ($web_browser -ne 'firefox') -and  ($web_browser -ne 'edge'))
+
+	SLEEP 1
+    Write-Host ""
+	if ( $web_browser -eq "firefox" )
+		{
+			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Roaming\Mozilla\Firefox\Profiles"
+			$latest_profile = Get-ChildItem -Path $dir_4_borowser_cookies | Sort-Object LastAccessTime -Descending | Select-Object -First 1
+			#$latest_profile
+		}
+	elseif ( $web_browser -eq "edge" )
+		{
+		
+			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Microsoft\Edge\User Data\Default"
+			#$latest_profile = Get-ChildItem -Path $dir_2_fox_profile | Sort-Object LastAccessTime -Descending | Select-Object -First 1
+			$latest_profile = $dir_4_borowser_cookies
+		
+		}
+	if ( $web_browser -eq "chrome" )
+		{
+			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Google\Chrome\User Data\Default"
+			#$latest_profile = Get-ChildItem -Path $dir_2_fox_profile | Sort-Object LastAccessTime -Descending | Select-Object -First 1
+			$latest_profile = $dir_4_borowser_cookies
+		
+		}
+	
+	do
+        {
+			SLEEP 1
+			write-host ""
+            Write-Host "CHCESZ SCIAGNAC VIDEO/AUDO Z JUZ PRZYGOTWANEJ PLAYLISTY ZNAJDUJACEJ SIE W PLIKU CZY WPISAC KILKA PLAYLIST W CONSOLE ? " -ForegroundColor Yellow
+			SLEEP 1
+			Write-Host ""
+            [int]$list_console = Read-Host "PODAJ CYFRE: 1 = GOTOWA LISTA (PLIK) ; 2 = CONSOLA: "
+        }while(($list_console -ne 1  ) -and ($list_console -ne 2))
+		
+	if ( $list_console -eq 1)
+		{
+			warning_select_file
+			$selected_file_var = Select-File
+
+			$selected_file_var_list = Get-Content -Path $selected_file_var
+		}
+	else
+		{
+			do
+				{
+					SLEEP 1
+					Write-Host ""
+					[string]$playlist_ID_yt = $(Write-Host "W CELU SCIAGNIECIA CALEY PLYLISTY NIEZBEDNY JEST LINK Z IDENTYFIKATOREM" -ForegroundColor yellow) + $(Write-Host "IDENTYFIKATOR PLAYLISTY ZOSTAL ZAZNACZONY NA ZIELONO W PRZYKLADOWYM LINKU PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green)  + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CZESC ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow ) + $(Write-Host "ABY ZAKONCZYC WPISZ q I ZATWIERDZ POPRZEZ ENTER:" -ForegroundColor yellow; Read-Host)
+					if ( $playlist_ID_yt -eq "q" )
+						{
+							}else{$playlist_ID_yt >> "$recources_main_dir\songs.txt"}          
+
+			}until($playlist_ID_yt -eq "q"  )
+		}
+
+	If (Test-Path $path2song_list_single)
+		{
+			$entered_playlist_console = Get-Content -Path "$recources_main_dir\songs.txt" 
+		}
+	else
+		{
+			write-host " "
+		}
+	
+	do
+		{
+			SLEEP 1
+			write-host ""
+			[string]$viedo_format = $(Write-Host "W JAKIM FORMACIE MA BYC SCIAGNIETY VIDEO." -ForegroundColor green ) + $(Write-Host " PRAWIDLOWE TO: avi ; mp4 " -ForegroundColor yellow ; Read-Host)
+		}while(($viedo_format -ne "avi") -and ($viedo_format -ne "mp4"))
+		
+	do
+        {
+			SLEEP 1
+			write-host ""
+            Write-Host "CZY CHCESZ RAZEM Z VIDEO SCIAGNAC ROWNIEZ SCIEZKE AUDIO ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
+            [int]$audio_yes_no = Read-Host "Enter number from 1-2"
+        }while(($audio_yes_no -ne 1  ) -and ($audio_yes_no -ne 2))
+    
+    if ( $audio_yes_no -eq 1 )
+        {
+            do
+                {
+                    SLEEP 1
+					write-host ""
+					$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE FORMATY TO: 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
+				}while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
+		}
+	else
+		{
+			write-host ""
+		}
+		
+	Write-host "LISTA CZY PLIK ? $list_console "
+	#PATH TO OUTPUT DIR
+	$output_directory = Select-Folder
+	Start explorer.exe $output_directory
+					
+	#PATH TO YT-DLP
+    $cmd = "$yt_dlp"
+	
+	if ( $list_console -eq 1)
+	{
+		if ( $audio_yes_no -eq 1 )
+			{
+				ForEach ($x in $selected_file_var_list) 
+                {	
+					write-host " "
+					write-host "NAJPIERW ZOSTANIE SCIAGNIETE AUDIO " -ForegroundColor yellow
+					write-host "SCIAGANIE AUDIO W TOKU.." -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+					write-host " "
+					write-host "SCIAGANIE AUDIO ZAKONCZONE! " -ForegroundColor yellow
+					write-host "SCIAGANIE VIDEO W TOKU.." -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+					write-host " "
+					write-host "SCIAGANIE VIDEO ZAKONCZONE! " -ForegroundColor yellow
+                }
+			}
+		if ( $audio_yes_no -eq 2 )
+			{
+				ForEach ($x in $selected_file_var_list)
+                {
+					write-host "AUDIO NO 1"
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+                }
+			}
+	}
+	
+	if ( $list_console -eq 2)
+	{
+		if ( $audio_yes_no -eq 1 )
+			{
+				ForEach ($y in $entered_playlist_console) 
+                {
+					write-host " "
+					write-host "NAJPIERW ZOSTANIE SCIAGNIETE AUDIO " -ForegroundColor yellow
+					write-host "SCIAGANIE AUDIO W TOKU.." -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" $y"
+					write-host " "
+					write-host "SCIAGANIE AUDIO ZAKONCZONE! " -ForegroundColor yellow
+					write-host "SCIAGANIE VIDEO W TOKU.." -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser ""$web_browser"":""$latest_profile"" $y"
+					write-host " "
+					write-host "SCIAGANIE VIDEO ZAKONCZONE! " -ForegroundColor yellow
+				}
+			}
+		if ( $audio_yes_no -eq 2 )
+			{
+				ForEach ($y in $entered_playlist_console) 
+                {
+					write-host "SCIAGANIE VIDEO W TOKU.." -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser ""$web_browser"":""$latest_profile"" $y"
+					write-host " "
+					write-host "SCIAGANIE VIDEO ZAKONCZONE! " -ForegroundColor yellow
+					sleep 1
+                }
+			}
+	Remove-Item -Path "$recources_main_dir\songs.txt"
+	}
+    
+
+    write-host ""
+    Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
+
+}
+#7
 Function updates_menu(){
 
     Function check_pobierak_version(){
@@ -502,12 +742,12 @@ Function updates_menu(){
 
         curl -o $recources_main_dir\ffmpeg.zip https://github.com/GyanD/codexffmpeg/releases/download/2022-09-07-git-e4c1272711/ffmpeg-2022-09-07-git-e4c1272711-essentials_build.zip
 
-	SLEEP 1
+		SLEEP 1
         Write-Host ""
         Write-Host "SCIAGANIE KONWERTERA ZAKONCZONE!!!" -ForegroundColor green
-	Write-Host ""
+		Write-Host ""
         SLEEP 1
-	Write-Host "WYPAKOWYWANIE KONWERTERA W TOKU" -ForegroundColor green
+		Write-Host "WYPAKOWYWANIE KONWERTERA W TOKU" -ForegroundColor green
 	
         Get-ChildItem $recources_main_dir -Filter *.zip | Expand-Archive -DestinationPath $recources_main_dir\ffmpeg -Force
 
@@ -634,13 +874,15 @@ function Show-Menu(){
     Write-Host ""
     Write-Host "2: SCIAGNIJ PIOSENKI Z LINKOW ZNAJDUJACYCH SIE W PLIKU." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "3: SCIAGNIJ CALA PLAYLISTE." -ForegroundColor Magenta
+    Write-Host "3: SCIAGNIJ AUDIO ZE WSKAZANEJ PLAYLISTY." -ForegroundColor Magenta
     Write-Host ""
-    Write-Host "4: SCIAGNIJ CALY KANAL." -ForegroundColor Yellow
+    Write-Host "4: SCIAGNIJ AUDIO ZE WSKAZANEGO YT CHANNEL." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "5: SCIAGNIJ VIDEO I/LUB AUDIO" -ForegroundColor Magenta
+    Write-Host "5: SCIAGNIJ VIDEO I/LUB AUDIO " -ForegroundColor Magenta
     Write-Host ""
-    Write-Host "6: MENU AKTUALIZACJI" -ForegroundColor Red
+	Write-Host "6: SCIAGNIJ Z PRYWATNEJ LISTY VIDEO I/LUB AUDIO" -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "7: MENU AKTUALIZACJI" -ForegroundColor Red
     Write-Host ""
     Write-Host "EXIT: ABY WYJSC - 0" #-ForegroundColor White
 }
@@ -653,7 +895,7 @@ do
     Do
         {
             [int]$selection = $(Write-Host "DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI. " -ForegroundColor green -NoNewLine) + $(Write-Host "ZATWIERDZ POPRZEZ ENTER: " -ForegroundColor Yellow -NoNewLine; Read-Host)
-        }until ( $selection -lt 7 )
+        }until ( $selection -lt 8 )
 
     switch ($selection)
     {
@@ -677,8 +919,12 @@ do
                 download_movie_and_or_music_from_list
             }
         '6' {
+                download_from_cookie
+            }
+		'7' {
                 updates_menu
             }
+						
     }
     pause
  }
