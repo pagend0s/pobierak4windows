@@ -1,4 +1,4 @@
-$pobierak_v = "2.81"
+$pobierak_v = "2.82"
 
 $logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
 $recources_main_dir = $null
@@ -20,6 +20,8 @@ $yt_dlp = "$recources_main_dir\yt-dlp.exe"
 $ffmpeg = "$recources_main_dir\ffmpeg\bin\ffmpeg.exe"
 
 Function internal_info(){
+
+$yt_dlp_ver_1 = $(write-host "AKTUALNA WERSJA YOUTUBE-DLP: " -NoNewLine -ForegroundColor yellow ) + $( Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--version" )
 
 $recources_test= @()
 $recources_test[0]
@@ -706,15 +708,15 @@ Function updates_menu(){
                 write-host "JEST DOSTEPNA NOWA WERSJA pobieraka: $pobierak_downloaded_double "  -ForegroundColor green
                 Write-Host ""
                 SLEEP 1
-                $whats_new = ( Get-Content $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new.txt )
-                Write-Host "NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY: $whats_new " -ForegroundColor green
+                $whats_new = (( Get-Content $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new.txt  | Out-String) -replace "`n", "`r`n" )
+                $whats_new = $(Write-Host "NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY: " -ForegroundColor green) + $( Write-Host "$whats_new" -ForegroundColor magenta )
        
                 do
                     {
                         Write-Host ""
                         SLEEP 1
                         Write-Host "CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
-                        [int]$instal_or_not = Read-Host "Enter number from 1-2"
+                        [int]$instal_or_not = Read-Host "WPROWADZ NUMER: 1-2"
                     }while(($instal_or_not -ne 1  ) -and ($instal_or_not -ne 2))
 
             }
@@ -757,6 +759,7 @@ Function updates_menu(){
                 Copy-Item  -Path $recources_main_dir\pobierak.ps1 $recources_main_dir\pobierak_bak.ps1
                 Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1
                 Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\pobierak.bat $pobierakbat_main_dir\pobierak.bat
+				Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new.txt $pobierakbat_main_dir\whats_new.txt 
                 Write-Host ""
                 SLEEP 1
                 Write-Host "POBIERAK ZOSTAL UAKTUALNIONY!!"
@@ -866,6 +869,35 @@ Function updates_menu(){
 			}
 
     }
+Function previous_version(){
+	
+	do
+		{
+			Write-Host ""
+            SLEEP 1
+            Write-Host "CZY CHCESZ PRZYWROCIC POPRZEDNIA WERSJE ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
+			[int]$previous_version = Read-Host "PODAJ NUMER: 1-2"
+		}while(($previous_version -ne 1  ) -and ($previous_version -ne 2))
+	if ( $previous_version -eq 1 )
+		{
+			sleep 1
+			write-host ""
+			write-host "PRZYWRACANIE POPRZEDNIEJ WERSJI." -ForegroundColor green
+			sleep 1
+			write-host ""
+			Copy-Item  -Path $recources_main_dir\pobierak_bak.ps1 $recources_main_dir\pobierak.ps1
+			sleep 1
+			write-host ""
+			write-host "POPRZEDNIA WERSJA ZOSTALA PRZYWROCONA" -ForegroundColor green
+			sleep 1
+			write-host ""
+			Start-Process $pobierakbat_main_dir\pobierak.bat
+		}
+	if ( $previous_version -eq 2 )
+		{
+			write-host "WERSJA NIE ZOSTANIE PRZYWROCONA" -ForegroundColor red
+		}
+}
 
     function Show_updates_Menu(){
         param (
@@ -883,6 +915,8 @@ Function updates_menu(){
     Write-Host ""
     Write-Host "4: PRZEPROWADZ WSZYSTKIE OPERACJE NA RAZ." -ForegroundColor Yellow
     Write-Host ""
+	Write-Host "5: PRZYWROC POPRZEDNIA WESJE POBIERAKA." -ForegroundColor Magenta
+    Write-Host ""
     Write-Host "EXIT: ABY WYJSC - 0" -ForegroundColor White
     }
 
@@ -894,7 +928,7 @@ Function updates_menu(){
             Do
                 {
                     [int]$selection = $(Write-Host "DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI. " -ForegroundColor green -NoNewLine) + $(Write-Host "ZATWIERDZ POPRZEZ ENTER: " -ForegroundColor Yellow -NoNewLine; Read-Host)
-                }until ( $selection -lt 5 )
+                }until ( $selection -lt 6 )
 
             switch ($selection)
                 {
@@ -915,6 +949,10 @@ Function updates_menu(){
                     '4' 
                         {
                             download_all_at_once
+                        }
+					'5' 
+                        {
+                            previous_version
                         }
 
                 }
