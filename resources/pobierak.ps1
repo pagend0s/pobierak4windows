@@ -1,4 +1,4 @@
-$pobierak_v = "2.82"
+$pobierak_v = "2.821"
 
 $logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
 $recources_main_dir = $null
@@ -710,7 +710,7 @@ Function updates_menu(){
                 SLEEP 1
                 $whats_new = (( Get-Content $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new.txt  | Out-String) -replace "`n", "`r`n" )
                 $whats_new = $(Write-Host "NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY: " -ForegroundColor green) + $( Write-Host "$whats_new" -ForegroundColor magenta )
-       
+       		$whats_new
                 do
                     {
                         Write-Host ""
