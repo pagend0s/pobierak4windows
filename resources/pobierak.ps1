@@ -1,6 +1,9 @@
-$pobierak_v = "2.821"
+$pobierak_v = "2.9"
 
+#VAR OF CURRENTLY LOGGED USER
 $logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
+
+#CLEAR MAIN VAR
 $recources_main_dir = $null
 $pobierakbat_main_dir = $null
 $yt_dlp = $null
@@ -8,20 +11,26 @@ $ffmpeg = $null
 $process_bak_primary_id = $null
 $process_bak_id = $null
 
+#GET POBIERAK PROCESS PID IF ACTIV
 $process_bak_primary_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_primary.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
 $process_bak_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_bak.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''}
 
+#SET MAIN DIR 
 $recources_main_dir =  Split-Path $PSCommandPath -Parent
-
+#SET RECOURCES DIR
 $pobierakbat_main_dir =  $recources_main_dir -replace 'Resources',''
-
+#SET YT-DLP PALCE
 $yt_dlp = "$recources_main_dir\yt-dlp.exe"
-
+#SET ffmpeg PALCE
 $ffmpeg = "$recources_main_dir\ffmpeg\bin\ffmpeg.exe"
 
+#FUNCTION TO DISPLAY MAIN INFORMATION IN FIRST MENU
 Function internal_info(){
 
-$yt_dlp_ver_1 = $(write-host "AKTUALNA WERSJA YOUTUBE-DLP: " -NoNewLine -ForegroundColor yellow ) + $( Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--version" )
+if (Test-Path $yt_dlp) 
+	{
+		$yt_dlp_ver_1 = $(write-host "AKTUALNA WERSJA YOUTUBE-DLP: " -NoNewLine -ForegroundColor yellow ) + $( Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--version" )
+	}
 
 $recources_test= @()
 $recources_test[0]
@@ -147,7 +156,56 @@ cls
             [string]$s = $(Write-Host "PODAJ KOMPLETNY LINK Z YOUTUBE NP (https://www.youtube.com/watch?v=XmaaSK19jGQ)" -ForegroundColor green) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor green) + $(Write-Host "W CELU PRZEZWANIA WPISZ q i WSCISNIJ enter: " -ForegroundColor red; Read-Host)
             if ( $s -eq "q" )
                 {
-                }else{$s >> "$recources_main_dir\songs.txt"}          
+                }
+			else
+			{
+				$testlink = "$s"
+
+				$yt_link_filter_plli = $testlink | Select-String -pattern "&list"
+
+					if ($yt_link_filter_plli -eq $null )
+						{
+							$yt_link_filter_channel = $testlink | Select-String -pattern "channel"
+								if ( $yt_link_filter_channel -ne $null )
+									{
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "W LINKU ZNAJDUJE SIE PODFOLDER CHANNEL CO BEDZIE SKUTKOWALO SCIAGNIECIEM CALEGO KANALU!" -ForegroundColor Red
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "ZOSTANIE ON ZIGNOROWANY." -ForegroundColor Red
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+									}
+								else
+									{
+										$s >> "$recources_main_dir\songs.txt"
+									}
+
+						}
+					else
+						{
+							$pattern = '(?<=\=).+?(?=\&)'
+							$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
+							$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
+							write-host ""
+							Start-Sleep -Milliseconds 500
+							write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
+							write-host ""
+							Start-Sleep -Milliseconds 500
+							$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
+							write-host ""
+							Start-Sleep -Milliseconds 500
+							write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
+							write-host ""
+							$correct_single_link >> "$recources_main_dir\songs.txt"
+
+						}						
+			}         
 
         }until($s -eq "q"  )
 
@@ -205,6 +263,58 @@ Function download_from_list(){
             [string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE TO 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
         }while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
 
+foreach ( $line in $d )
+{
+    $testlink = "$line"
+
+				$yt_link_filter_plli = $testlink | Select-String -pattern "&list"
+
+					if ($yt_link_filter_plli -eq $null )
+						{
+							$yt_link_filter_channel = $testlink | Select-String -pattern "channel"
+								if ( $yt_link_filter_channel -ne $null )
+									{
+										write-host "-----------------------------------------------------------------------------------------------"
+										Start-Sleep -Milliseconds 500
+										write-host "W LINKU ZNAJDUJE SIE PODFOLDER CHANNEL CO BEDZIE SKUTKOWALO SCIAGNIECIEM CALEGO KANALU!" -ForegroundColor Red
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "ZOSTANIE ON ZIGNOROWANY." -ForegroundColor Red
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
+										write-host ""
+										Start-Sleep -Milliseconds 500
+										write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+                                        write-host "-----------------------------------------------------------------------------------------------"
+                                        $list_after_filtration = 1
+									}
+								else
+									{
+										$line >> "$recources_main_dir\songs_out.txt"
+									}
+
+						}
+					else
+						{
+							$pattern = '(?<=\=).+?(?=\&)'
+							$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
+							$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
+							write-host "-----------------------------------------------------------------------"
+							Start-Sleep -Milliseconds 500
+							write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
+							write-host ""
+							Start-Sleep -Milliseconds 500
+							$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
+							write-host ""
+							Start-Sleep -Milliseconds 500
+							write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
+							write-host "------------------------------------------------------------------------"
+							$correct_single_link >> "$recources_main_dir\songs_out.txt"
+                            $list_after_filtration = 1
+						}						
+			}         
+
     #PATH TO OUTPUT DIR
     $output_directory = Select-Folder	
 	$free_space = Get-FreeSpace
@@ -218,19 +328,43 @@ Function download_from_list(){
 	$lines_var = $lines_var.trim() -ne ""
 	[int]$lines_var = $lines_var.Count
 	
-    [int]$lines_var+=1
+    #[int]$lines_var+=1
     $xyz=0
-    ForEach ($h in $d) 
-        {
-			[int]$lines_var-= 1
-			$xyz++
-			write-host " "
-			write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
-            Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $h"
-        }
-
+	
+	if ( $list_after_filtration -eq 1 )
+	{
+		$selected_file_var = "$recources_main_dir\songs_out.txt"
+		$d = Get-Content -Path $selected_file_var
+		$d = $d.trim() -ne ""
+		ForEach ($h in $d) 
+			{
+				[int]$lines_var-= 1
+				$xyz++
+				write-host " "
+				write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
+				Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $h"
+			}
+		Remove-Item -Path "$recources_main_dir\songs_out.txt"
         write-host ""
         Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
+		
+	}
+	else
+		{
+			ForEach ($h in $d) 
+				{
+					[int]$lines_var-= 1
+					$xyz++
+					write-host " "
+					write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $h"
+				}
+
+		write-host ""
+        Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
+		Remove-Item -Path "$recources_main_dir\songs.txt"
+		}
+		
 }
 #3
 Function download_playlist(){
@@ -298,9 +432,10 @@ cls
 		{
 			Remove-Item -Path $path2song_list_single
 		}
-	else
+	$path2song_list_select_file = "$recources_main_dir\songs_out.txt"
+	If (Test-Path $path2song_list_select_file)
 		{
-			write-host " "
+			Remove-Item -Path $path2song_list_select_file
 		}
 		
 	do
@@ -318,6 +453,57 @@ cls
 
 			$d = Get-Content -Path $selected_file_var
 			$d = $d.trim() -ne ""
+			foreach ( $line in $d )
+				{
+					$testlink = "$line"
+
+						$yt_link_filter_plli = $testlink | Select-String -pattern "&list"
+
+							if ($yt_link_filter_plli -eq $null )
+								{
+									$yt_link_filter_channel = $testlink | Select-String -pattern "channel"
+										if ( $yt_link_filter_channel -ne $null )
+											{
+												write-host "-----------------------------------------------------------------------------------------------"
+												Start-Sleep -Milliseconds 500
+												write-host "W LINKU ZNAJDUJE SIE PODFOLDER CHANNEL CO BEDZIE SKUTKOWALO SCIAGNIECIEM CALEGO KANALU!" -ForegroundColor Red
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "ZOSTANIE ON ZIGNOROWANY." -ForegroundColor Red
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+												write-host "-----------------------------------------------------------------------------------------------"
+												$list_after_filtration = 1
+											}
+										else
+											{
+												$line >> "$recources_main_dir\songs_out.txt"
+											}
+
+								}
+							else
+								{
+									$pattern = '(?<=\=).+?(?=\&)'
+									$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
+									$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
+									write-host "-----------------------------------------------------------------------"
+									Start-Sleep -Milliseconds 500
+									write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
+									write-host ""
+									Start-Sleep -Milliseconds 500
+									$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
+									write-host ""
+									Start-Sleep -Milliseconds 500
+									write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
+									write-host "------------------------------------------------------------------------"
+									$correct_single_link >> "$recources_main_dir\songs_out.txt"
+									$list_after_filtration = 1
+								}						
+				}		
 		}
 	else
 		{
@@ -328,14 +514,70 @@ cls
 					[string]$s = $(Write-Host "PODAJ KOMPLETNY LINK Z YOUTUBE NP (https://www.youtube.com/watch?v=XmaaSK19jGQ)" -ForegroundColor green) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor green) + $(Write-Host "W CELU PRZEZWANIA WPISZ q i WSCISNIJ enter: " -ForegroundColor red; Read-Host)
 					if ( $s -eq "q" )
 						{
-							}else{$s >> "$recources_main_dir\songs.txt"}          
+						}
+					else
+						{
+							$testlink = "$s"
 
-			}until($s -eq "q"  )
+							$yt_link_filter_plli = $testlink | Select-String -pattern "&list"
+
+							if ($yt_link_filter_plli -eq $null )
+								{
+									$yt_link_filter_channel = $testlink | Select-String -pattern "channel"
+										if ( $yt_link_filter_channel -ne $null )
+											{
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "W LINKU ZNAJDUJE SIE PODFOLDER CHANNEL CO BEDZIE SKUTKOWALO SCIAGNIECIEM CALEGO KANALU!" -ForegroundColor Red
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "ZOSTANIE ON ZIGNOROWANY." -ForegroundColor Red
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
+												write-host ""
+												Start-Sleep -Milliseconds 500
+												write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+											}
+										else
+											{
+												$s >> "$recources_main_dir\songs.txt"
+											}
+
+								}
+							else
+								{
+									$pattern = '(?<=\=).+?(?=\&)'
+									$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
+									$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
+									write-host ""
+									Start-Sleep -Milliseconds 500
+									write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
+									write-host ""
+									Start-Sleep -Milliseconds 500
+									$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
+									write-host ""
+									Start-Sleep -Milliseconds 500
+									write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
+									write-host ""
+									$correct_single_link >> "$recources_main_dir\songs.txt"
+
+								}						
+						}         
+
+				}until($s -eq "q"  )
 		}
 	$path2song_list_single = "$recources_main_dir\songs.txt"
 	If (Test-Path $path2song_list_single)
 		{
-			$c = Get-Content -Path "$recources_main_dir\songs.txt"
+			if ( $list_after_filtration -eq 1 )
+				{
+					$c = Get-Content -Path "$recources_main_dir\songs_out.txt"
+				}
+			else
+				{
+					$c = Get-Content -Path "$recources_main_dir\songs.txt"
+				}
 		}
 	else
 		{
@@ -370,7 +612,7 @@ cls
 		{
 			write-host ""
 		}
-		
+	
 
 	#PATH TO OUTPUT DIR
 	$output_directory = Select-Folder
@@ -384,7 +626,17 @@ cls
 	if ( $list_console -eq 1)
 	{
 		$xyz=0
-		$lines_var = Get-Content "$selected_file_var" 
+		if ( $list_after_filtration -eq 1 )
+				{
+					$d = Get-Content -Path "$recources_main_dir\songs_out.txt"
+					$d = $d.trim() -ne ""
+					$lines_var = Get-Content -Path "$recources_main_dir\songs_out.txt"
+				}
+			else
+				{
+					$lines_var = Get-Content "$selected_file_var"
+				}
+				
 		$lines_var = $lines_var.trim() -ne ""
 		[int]$lines_var = $lines_var.Count	
 		[int]$lines_var+=1
@@ -421,7 +673,15 @@ cls
 	}
 	if ( $list_console -eq 2)
 	{
-		$lines_var = Get-Content "$path2song_list_single" 
+		if ( $list_after_filtration -eq 1 )
+				{
+					$lines_var = Get-Content "$recources_main_dir\songs_out.txt"
+				}
+			else
+				{
+					$lines_var = Get-Content "$path2song_list_single"
+				}
+	 
 		$lines_var = $lines_var.trim() -ne ""
 		[int]$lines_var = $lines_var.Count	
 		[int]$lines_var+=1
@@ -453,16 +713,122 @@ cls
                     Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"					
 				}
 			}
-        
-	Remove-Item -Path "$recources_main_dir\songs.txt"
+     
+	
 	}
     
-
+	
+	If (Test-Path $path2song_list_single)
+		{
+			Remove-Item -Path $path2song_list_single
+		}
+	
+	If (Test-Path $path2song_list_select_file)
+		{
+			Remove-Item -Path $path2song_list_select_file
+		}
     write-host ""
     Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
 
 }
+
 #6
+Function download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL(){
+cls
+
+	$path2song_list_single = "$recources_main_dir\songs.txt"
+	If (Test-Path $path2song_list_single)
+		{
+			Remove-Item -Path $path2song_list_single
+		}
+
+	do
+		{
+			SLEEP 1
+			Write-Host ""
+			$(Write-Host "W CELU SCIAGNIECIA CALEY PLYLISTY NIEZBEDNY JEST JEJ IDENTYFIKATOR" -ForegroundColor yellow) + $(Write-Host "IDENTYFIKATOR PLAYLISTY ZOSTAL ZAZNACZONY NA ZIELONO W PRZYKLADOWYM LINKU PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green)  + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CZESC ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow; )
+			write-host ""
+			$(Write-Host "W CELU SCIAGNIECIA CALEGO KANALU  NIEZBEDNY JEST LINK ZAWIERAJACY PODFOLDER --- channel --- W LINKU" -ForegroundColor yellow) + $(Write-Host "PRZYKLADOWY LINK ZNAJDUJE SIE PONIZEJ" -ForegroundColor yellow ) + $(Write-Host "https://www.youtube.com/" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "channel" -NoNewline -ForegroundColor green) + $(Write-Host "/UC0C1W6nV0Rv6QkvAAE_AgXg" -ForegroundColor Magenta ) + $(Write-Host "NAJPROSCIEJ SKOPIOWAC CALY LINK Z PODFOLDEREM --- channel --- Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU. " -ForegroundColor yellow; )
+			[string]$s = $(write-host "PODAJ LINK: " -nonewline ) + $(Read-Host ; )
+			if ( $s -eq "q" )
+				{
+				}else{$s >> "$recources_main_dir\songs.txt"}          
+
+			}until($s -eq "q"  )
+
+	do
+		{
+			SLEEP 1
+			write-host ""
+			$viedo_format = $(Write-Host "W JAKIM FORMACIE MA BYC SCIAGNIETY VIDEO." -ForegroundColor green ) + $(Write-Host " PRAWIDLOWE TO: avi ; mp4 " -ForegroundColor yellow ; Read-Host)
+		}while(($viedo_format -ne "avi") -and ($viedo_format -ne "mp4"))
+		
+	do
+        {
+			SLEEP 1
+			write-host ""
+            Write-Host "CZY CHCESZ RAZEM Z VIDEO SCIAGNAC ROWNIEZ SCIEZKE AUDIO ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
+            [int]$audio_yes_no = Read-Host "Enter number from 1-2"
+        }while(($audio_yes_no -ne 1  ) -and ($audio_yes_no -ne 2))
+    
+    if ( $audio_yes_no -eq 1 )
+        {
+            do
+                {
+					write-host ""
+                    SLEEP 1
+					[string]$quality = $(Write-Host "PODAJ WARTOSC OZNACZAJACA JAKOSC W JAKIEJ MA BYC PRZEKONWERTOWANA PIOSENKA. " -ForegroundColor green -NoNewLine) + $(Write-Host "PRAWIDLOWE FORMATY TO: 128K LUB 360K: " -ForegroundColor yellow -NoNewLine ; Read-Host)
+				}while(($quality -ne "128K"  ) -and ($quality -ne "360K"))
+		}
+	else
+		{
+			write-host ""
+		}
+		
+
+	#PATH TO OUTPUT DIR
+	$c = Get-Content -Path "$recources_main_dir\songs.txt"
+	
+	$output_directory = Select-Folder
+	Start explorer.exe $output_directory
+	$free_space = Get-FreeSpace
+	sleep 1
+	write-host = "WOLNE MIEJSCE W FOLDERZE DOCELOWYM TO: $free_space GB." -ForegroundColor Yellow
+	sleep 2
+					
+		if ( $audio_yes_no -eq 1 )
+			{
+				ForEach ($a in $c) 
+                {
+					write-host " "
+					write-host "ZACIAGANIE AUDIO." -ForegroundColor yellow
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+					write-host " "
+					write-host "ZACIAGANIE VIDEO." -ForegroundColor yellow
+					write-host " "
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+                }
+			}
+		if ( $audio_yes_no -eq 2 )
+			{
+				ForEach ($a in $c)
+                {
+					[int]$lines_var-= 1
+					$xyz++
+					write-host " "
+					write-host "ZACIAGANIE VIDEO." -ForegroundColor yellow
+					write-host " "
+                    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"					
+				}
+			}
+        
+	Remove-Item -Path "$recources_main_dir\songs.txt"
+	
+    write-host ""
+    Write-Host "SCIAGANIE ZAKONCZONE SUKCESEM." -ForegroundColor Green -NoNewline
+}
+
+#7
 function download_from_cookie(){
 cls
 	$path2song_list_single = "$recources_main_dir\songs.txt"
@@ -981,7 +1347,7 @@ function Show-Menu(){
     param (
             [string]$Title = 'Pobierak'
     )
-
+	
     Clear-Host
     Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "Pobierak wersja: " ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
     internal_info
@@ -994,11 +1360,13 @@ function Show-Menu(){
     Write-Host ""
     Write-Host "4: SCIAGNIJ AUDIO ZE WSKAZANEGO YT CHANNEL." -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "5: SCIAGNIJ VIDEO I/LUB AUDIO " -ForegroundColor Magenta
+    Write-Host "5: SCIAGNIJ VIDEO I/LUB AUDIO (POJEDYNCZE KAWALKI)" -ForegroundColor Magenta
     Write-Host ""
-	Write-Host "6: SCIAGNIJ Z PRYWATNEJ LISTY VIDEO I/LUB AUDIO" -ForegroundColor Yellow
+	Write-Host "6: SCIAGNIJ VIDEO I/LUB AUDIO Z PLAYLISTY LUB CHANNEL " -ForegroundColor Yellow
     Write-Host ""
-    Write-Host "7: MENU AKTUALIZACJI" -ForegroundColor Red
+	Write-Host "7: SCIAGNIJ Z PRYWATNEJ LISTY VIDEO I/LUB AUDIO" -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host "8: MENU AKTUALIZACJI" -ForegroundColor Red
     Write-Host ""
     Write-Host "EXIT: ABY WYJSC - 0" #-ForegroundColor White
 }
@@ -1011,7 +1379,7 @@ do
     Do
         {
             [int]$selection = $(Write-Host "DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI. " -ForegroundColor green -NoNewLine) + $(Write-Host "ZATWIERDZ POPRZEZ ENTER: " -ForegroundColor Yellow -NoNewLine; Read-Host)
-        }until ( $selection -lt 9 )
+        }until ( $selection -lt 10 )
 
     switch ($selection)
     {
@@ -1034,13 +1402,16 @@ do
         '5' {
                 download_movie_and_or_music_from_list
             }
-        '6' {
+		'6' {
+                download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL
+            }
+        '7' {
                 download_from_cookie
             }
-		'7' {
+		'8' {
                 updates_menu
             }
-		'8' {
+		'9' {
                 youtube_dlp_dev
             }
 						
