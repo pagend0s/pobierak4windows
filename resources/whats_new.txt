@@ -1,8 +1,6 @@
-wersja 2.82
--dodana 6 opcja menu, sciaganie prywatnej listy
--poprawionych kilka bledow logicznych
--kilka zmian kosmetycznych
--dodanie pokazania ilosci wolnego miejsca
--licznik dla poszczegolnych opcji odnosnie ilosci pojedynczych linkow
--dodane przywracanie poprzedniej wersji w aktualizacjach
--zmiany kosmetyczne
+wersja 2.9
+-Najwazniejsza zmiana to filtr linkow pod katem odnosnika do channel lub playlist tam gdzie nie jest to wskazane.
+-Teraz nawet omylkowo wprowadzony link zostanie skorygowany lub zignorowany
+-co zapobiegnie np sciagnieciu calej playlisty lub kanalu tam gdzie sie trego nie chce.
+-Dodana opcja menu w celu sciagniecia multimediow zarowno z channel lub playlist
+-albo z pojedynczych linkow.
