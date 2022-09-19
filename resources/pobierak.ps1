@@ -1,4 +1,4 @@
-$pobierak_v = "2.9"
+$pobierak_v = "2.901"
 
 #VAR OF CURRENTLY LOGGED USER
 $logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
@@ -57,7 +57,7 @@ if (Test-Path $test_resource_ffmpeg_if_exist)
             else
                 {
                     $warning_missing_resource = ( Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "UWAGA UWAGA UWAGA " ) -ForegroundColor RED )
-                    $resource_ffmpeg = ( $(write-host "! BIBLIOTEKA FFMPEG NIE JEST SCIAGNIETA !." -ForegroundColor Red ) + $( write-host "W CELU POPRAWNEGO DZIALANIA POBIERAKA UZYJ OPCJI NR 6 I Z MENU AKTUALIZACJI OPCJE NR 2 LUB 4" -ForegroundColor Red ) + $( write-host ""; ))
+                    $resource_ffmpeg = ( $(write-host "! BIBLIOTEKA FFMPEG NIE JEST SCIAGNIETA !." -ForegroundColor Red ) + $( write-host "W CELU POPRAWNEGO DZIALANIA POBIERAKA UZYJ OPCJI NR 8 I Z MENU AKTUALIZACJI OPCJE NR 2 LUB 4" -ForegroundColor Red ) + $( write-host ""; ))
                     $recources_test += ," $warning_missing_resource"
                     $recources_test += ," $resource_ffmpeg"
                 }
@@ -71,7 +71,7 @@ if (Test-Path $test_resource_yt_dlp_if_exist)
             else
                 {
                     $warning_missing_resource = ( Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "UWAGA UWAGA UWAGA " ) -ForegroundColor RED )
-                    $resource_yt_dlp = ( $(write-host "! YOUTUBE-DLP NIE JEST SCIAGNIETY !." -ForegroundColor Red ) + $( write-host "W CELU POPRAWNEGO DZIALANIA POBIERAKA UZYJ OPCJI NR 6 I Z MENU AKTUALIZACJI OPCJE NR 3 LUB 4" -ForegroundColor Red ) + $( write-host ""; ) )
+                    $resource_yt_dlp = ( $(write-host "! YOUTUBE-DLP NIE JEST SCIAGNIETY !." -ForegroundColor Red ) + $( write-host "W CELU POPRAWNEGO DZIALANIA POBIERAKA UZYJ OPCJI NR 8 I Z MENU AKTUALIZACJI OPCJE NR 3 LUB 4" -ForegroundColor Red ) + $( write-host ""; ) )
                     $recources_test += ," $warning_missing_resource"
                     $recources_test += ," $resource_yt_dlp"
                 }
@@ -168,7 +168,7 @@ cls
 							$yt_link_filter_channel = $testlink | Select-String -pattern "channel"
 								if ( $yt_link_filter_channel -ne $null )
 									{
-										write-host ""
+										write-host "--------------------------------------------------------------------------------------------------------"
 										Start-Sleep -Milliseconds 500
 										write-host "W LINKU ZNAJDUJE SIE PODFOLDER CHANNEL CO BEDZIE SKUTKOWALO SCIAGNIECIEM CALEGO KANALU!" -ForegroundColor Red
 										write-host ""
@@ -179,7 +179,8 @@ cls
 										write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
 										write-host ""
 										Start-Sleep -Milliseconds 500
-										write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+										write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 LUB 6 Z MENU." -ForegroundColor Green
+										write-host "--------------------------------------------------------------------------------------------------------"
 									}
 								else
 									{
@@ -192,7 +193,7 @@ cls
 							$pattern = '(?<=\=).+?(?=\&)'
 							$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
 							$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
-							write-host ""
+							write-host "--------------------------------------------------------------------------"
 							Start-Sleep -Milliseconds 500
 							write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
 							write-host ""
@@ -200,8 +201,8 @@ cls
 							$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
 							write-host ""
 							Start-Sleep -Milliseconds 500
-							write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
-							write-host ""
+							write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3 LUB 6" -ForegroundColor Magenta
+							write-host "--------------------------------------------------------------------------"
 							$correct_single_link >> "$recources_main_dir\songs.txt"
 
 						}						
@@ -285,7 +286,7 @@ foreach ( $line in $d )
 										write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
 										write-host ""
 										Start-Sleep -Milliseconds 500
-										write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+										write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 LUB 6 Z MENU." -ForegroundColor Green
                                         write-host "-----------------------------------------------------------------------------------------------"
                                         $list_after_filtration = 1
 									}
@@ -300,7 +301,7 @@ foreach ( $line in $d )
 							$pattern = '(?<=\=).+?(?=\&)'
 							$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
 							$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
-							write-host "-----------------------------------------------------------------------"
+							write-host "------------------------------------------------------------------------------"
 							Start-Sleep -Milliseconds 500
 							write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
 							write-host ""
@@ -308,8 +309,8 @@ foreach ( $line in $d )
 							$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
 							write-host ""
 							Start-Sleep -Milliseconds 500
-							write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
-							write-host "------------------------------------------------------------------------"
+							write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3 LUB 6" -ForegroundColor Magenta
+							write-host "------------------------------------------------------------------------------"
 							$correct_single_link >> "$recources_main_dir\songs_out.txt"
                             $list_after_filtration = 1
 						}						
@@ -475,7 +476,7 @@ cls
 												write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
 												write-host ""
 												Start-Sleep -Milliseconds 500
-												write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+												write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 LUB 6 Z MENU." -ForegroundColor Green
 												write-host "-----------------------------------------------------------------------------------------------"
 												$list_after_filtration = 1
 											}
@@ -490,7 +491,7 @@ cls
 									$pattern = '(?<=\=).+?(?=\&)'
 									$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
 									$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
-									write-host "-----------------------------------------------------------------------"
+									write-host "------------------------------------------------------------------------------"
 									Start-Sleep -Milliseconds 500
 									write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
 									write-host ""
@@ -498,8 +499,8 @@ cls
 									$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
 									write-host ""
 									Start-Sleep -Milliseconds 500
-									write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
-									write-host "------------------------------------------------------------------------"
+									write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3 LUB 6" -ForegroundColor Magenta
+									write-host "------------------------------------------------------------------------------"
 									$correct_single_link >> "$recources_main_dir\songs_out.txt"
 									$list_after_filtration = 1
 								}						
@@ -526,7 +527,7 @@ cls
 									$yt_link_filter_channel = $testlink | Select-String -pattern "channel"
 										if ( $yt_link_filter_channel -ne $null )
 											{
-												write-host ""
+												write-host "----------------------------------------------------------------------------------------------"
 												Start-Sleep -Milliseconds 500
 												write-host "W LINKU ZNAJDUJE SIE PODFOLDER CHANNEL CO BEDZIE SKUTKOWALO SCIAGNIECIEM CALEGO KANALU!" -ForegroundColor Red
 												write-host ""
@@ -537,7 +538,8 @@ cls
 												write-host "JESLI MAM SCIAGNAC POJEDYNCZA SCIEZKE AUDIO TO WSKAZ LINK BEZ CZESCI (PODFOLDERU) = channel = ." -ForegroundColor Magenta
 												write-host ""
 												Start-Sleep -Milliseconds 500
-												write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 Z MENU." -ForegroundColor Green
+												write-host "W PRZECIWNYM RAZIE UZYJ OPCJI NR 4 LUB 6 Z MENU." -ForegroundColor Green
+												write-host "----------------------------------------------------------------------------------------------"
 											}
 										else
 											{
@@ -550,7 +552,7 @@ cls
 									$pattern = '(?<=\=).+?(?=\&)'
 									$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
 									$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
-									write-host ""
+									write-host "--------------------------------------------------------------------------------"
 									Start-Sleep -Milliseconds 500
 									write-host "W LINKU WYKRYLEM ODNOSNIK DO CALEJ PLAYLISTY !" -ForegroundColor Red
 									write-host ""
@@ -558,8 +560,8 @@ cls
 									$(write-host "ZOSTANIE ON SKORYGOWANY DO: " -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; )
 									write-host ""
 									Start-Sleep -Milliseconds 500
-									write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3" -ForegroundColor Magenta
-									write-host ""
+									write-host "JESLI CHODZI CI O SCIAGNIECIE CALEJ PLAYLISTY TO UZYJ OPCJI Z MENU NR: 3 LUB 6" -ForegroundColor Magenta
+									write-host "--------------------------------------------------------------------------------"
 									$correct_single_link >> "$recources_main_dir\songs.txt"
 
 								}						
