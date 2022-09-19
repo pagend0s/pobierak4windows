@@ -1,3 +1,6 @@
+wersja 2.901
+-small cosmetic changes
+
 wersja 2.9
 -Najwazniejsza zmiana to filtr linkow pod katem odnosnika do channel lub playlist tam gdzie nie jest to wskazane.
 -Teraz nawet omylkowo wprowadzony link zostanie skorygowany lub zignorowany
