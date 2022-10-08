@@ -1,4 +1,4 @@
-$pobierak_v = "3.012"
+$pobierak_v = "3.013"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1709,7 +1709,7 @@ Function updates_menu(){
 						Write-Host "POBIERAK ZOSTAL UAKTUALNIONY!!"
 						Remove-Item $path_to_temp -Force -Recurse #REMOVE TEMP WITH DOWNLOADED POBIERAK AFTER COPY TO MAIN DIR
 				
-						if ( $selection -eq 4 )
+						if ( $selection_update -eq 4 )
 							{
 								write-host " "
 							}
@@ -1730,7 +1730,7 @@ Function updates_menu(){
 						Write-Host "POBIERAK IS UP TO DATE"
 						Remove-Item $path_to_temp -Force -Recurse
 				
-						if ( $selection -eq 4 )
+						if ( $selection_update -eq 4 )
 							{
 								write-host " "
 							}
@@ -1866,7 +1866,7 @@ Function updates_menu(){
         check_pobierak_version
         download_ffmpeg
         download_yt_dlp		
-		if ( $selection -eq 4 )
+		if ( $selection_update -eq 4 )
 			{	
 				if ( $sys_lang -eq "PL" )
 					{
