@@ -1,4 +1,4 @@
-$pobierak_v = "3.01"
+$pobierak_v = "3.011"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1260,6 +1260,7 @@ cls
 			write-host ""
 			sleep 1
 			Write-Host "	YOU CHOOSE THE OPTIONS NUMBER 7. AVAILABLE CHOICES: VIDEO YES / NO - AND / OR AUDIO FROM PRIVATE LIST" -ForegroundColor Yellow
+		}
 	$path2song_list_single = "$recources_main_dir\songs.txt"
 	If (Test-Path $path2song_list_single)
 		{
@@ -1573,6 +1574,7 @@ cls
 			Write-Host "WHOLE DOWNLOADING PROCESS IS FINISHED" -ForegroundColor Green -NoNewline
 			Remove-Item -Path "$recources_main_dir\songs.txt"
 		}
+	
 }
 ##############################
 #8 UPDATES MENU FUNCTIONS #8 #
