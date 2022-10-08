@@ -1,5 +1,4 @@
 @echo off
-color 2
 
 :PowerShell2
 pushd %~dp0
