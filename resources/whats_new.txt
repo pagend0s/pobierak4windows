@@ -1,9 +1,0 @@
-wersja 2.901
--small cosmetic changes
-
-wersja 2.9
--Najwazniejsza zmiana to filtr linkow pod katem odnosnika do channel lub playlist tam gdzie nie jest to wskazane.
--Teraz nawet omylkowo wprowadzony link zostanie skorygowany lub zignorowany
--co zapobiegnie np sciagnieciu calej playlisty lub kanalu tam gdzie sie trego nie chce.
--Dodana opcja menu w celu sciagniecia multimediow zarowno z channel lub playlist
--albo z pojedynczych linkow.
