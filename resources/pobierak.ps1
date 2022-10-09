@@ -1,4 +1,4 @@
-$pobierak_v = "3.013"
+$pobierak_v = "3.014"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1629,8 +1629,8 @@ Function updates_menu(){
 								Write-Host ""
 								SLEEP 1
 								Write-Host "CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE " -ForegroundColor Yellow
-								[int]$instal_or_not = Read-Host "WPROWADZ NUMER: 1-2"
-							}while(($instal_or_not -ne 1  ) -and ($instal_or_not -ne 2))
+								$instal_or_not = Read-Host "WPROWADZ NUMER: 1-2"
+							}while(([int]$instal_or_not -ne 1  ) -and ([int]$instal_or_not -ne 2))
 					}
 				else
 					{
@@ -1638,6 +1638,15 @@ Function updates_menu(){
 						SLEEP 1
 						write-host "BRAK NOWEJ WERSJI POBIERAKA" -ForegroundColor red
 						Remove-Item $path_to_temp -Force -Recurse
+                        Write-Host ""
+                        SLEEP 1
+                        Write-Host "OBECNA WERSJA TO: $version_present "
+                        SLEEP 3
+                        SLEEP 5
+                        if ( $selection_update -eq 1 )
+                            {
+                                main_menu
+                            }
 					}
 			}
 		else
@@ -1657,8 +1666,8 @@ Function updates_menu(){
 								Write-Host ""
 								SLEEP 1
 								Write-Host "DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO" -ForegroundColor Yellow
-								[int]$instal_or_not = Read-Host "ENTER THE CORRECT VALUE: 1-2"
-							}while(($instal_or_not -ne 1  ) -and ($instal_or_not -ne 2))
+								$instal_or_not = Read-Host "ENTER THE CORRECT VALUE: 1-2"
+							}while(([int]$instal_or_not -ne 1  ) -and ([int]$instal_or_not -ne 2))
 					}
 				else
 					{
@@ -1666,6 +1675,16 @@ Function updates_menu(){
 						SLEEP 1
 						write-host "THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT." -ForegroundColor red
 						Remove-Item $path_to_temp -Force -Recurse
+                        Write-Host ""
+                        SLEEP 1
+                        Write-Host "PRESENT VERSION IS: $version_present "
+                        SLEEP 3
+                        SLEEP 5
+							if ( $selection_update -eq 1 )
+                                {
+                                    main_menu
+                                }
+                        
 					}
 			}
         if ( $instal_or_not -eq 1 )
@@ -1709,18 +1728,16 @@ Function updates_menu(){
 						Write-Host "POBIERAK ZOSTAL UAKTUALNIONY!!"
 						Remove-Item $path_to_temp -Force -Recurse #REMOVE TEMP WITH DOWNLOADED POBIERAK AFTER COPY TO MAIN DIR
 				
-						if ( $selection_update -eq 4 )
-							{
-								write-host " "
-							}
-						else
+						if (($selection_update -eq 1) -and ($instal_or_not -eq 1))
+					
 							{
 								Write-Host ""
 								SLEEP 1
 								Write-Host "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
 								Write-Host ""
 								SLEEP 5
-								Start-Process $pobierakbat_main_dir\pobierak.bat #START NEW POBIERAK VERSION
+                                Start-Process $pobierakbat_main_dir\pobierak.bat #START NEW POBIERAK VERSION
+								EXIT
 							}
 					}
 				else
@@ -1728,29 +1745,43 @@ Function updates_menu(){
 						Write-Host ""
 						SLEEP 1
 						Write-Host "POBIERAK IS UP TO DATE"
+                        SLEEP 2
 						Remove-Item $path_to_temp -Force -Recurse
 				
-						if ( $selection_update -eq 4 )
-							{
-								write-host " "
-							}
-						else
+						if (($selection_update -eq 1) -and ($instal_or_not -eq 1))
 							{
 								Write-Host ""
 								SLEEP 1
 								Write-Host "IN THE MOMENT A NEW VERSION WILL BE OPENED AND THE OLD VERSION CAN BE CLOSED"
 								Write-Host ""
+                                Start-Process $pobierakbat_main_dir\pobierak.bat #START NEW POBIERAK VERSION
 								SLEEP 5
-								Start-Process $pobierakbat_main_dir\pobierak.bat #START NEW POBIERAK VERSION
+								EXIT
 							}
 					}
 			}
         else
             {
-                Write-Host ""
-                SLEEP 1
-                Write-Host "PRESENT VERSION IS: $version_present "
+                if (( $sys_lang -eq "PL" ) -and ( $instal_or_not -eq 2))
+                    {
+                       Write-Host ""
+                       SLEEP 1
+                       Write-Host "OBECNA WERSJA TO: $version_present "
+                       SLEEP 2
+                    }
+                elseif (( $sys_lang -ne "PL" ) -and ( $instal_or_not -eq 2))
+                    {
+                        Write-Host ""
+                        SLEEP 1
+                        Write-Host "PRESENT VERSION IS: $version_present "
+                        SLEEP 2
+                    }
+                if ( $selection_update -eq 1 )
+                    {
+                        main_menu
+                    }
             }
+		return $instal_or_not
 
     }
 	###############################
@@ -1863,19 +1894,21 @@ Function updates_menu(){
 	#4 ALL IN ONE OPTION#4 #
 	########################
     Function download_all_at_once(){
-        check_pobierak_version
+        $instal_or_not = check_pobierak_version
         download_ffmpeg
         download_yt_dlp		
-		if ( $selection_update -eq 4 )
+		if ( $instal_or_not -eq 1 )
 			{	
 				if ( $sys_lang -eq "PL" )
 					{
 						Write-Host ""
+						Write-Host "!!!WSZYSTKIE OPERACJE ZAKONCZONE SUKCESEM!!!"
 						SLEEP 1
 						Write-Host "ZA MOMENT ZOSTANIE OTWARTA NOWA WERSJA A STARA WERSJE BEDZIE MOZNA ZAMKNAC"
 						Write-Host ""
 						SLEEP 5
-						Start-Process $pobierakbat_main_dir\pobierak.bat
+                        Start-Process $pobierakbat_main_dir\pobierak.bat 
+						EXIT
 					}
 				else
 					{
@@ -1884,12 +1917,25 @@ Function updates_menu(){
 						Write-Host "IN THE MOMENT A NEW VERSION WILL BE OPENED AND THE OLD VERSION CAN BE CLOSED"
 						Write-Host ""
 						SLEEP 5
-						Start-Process $pobierakbat_main_dir\pobierak.bat
+                        Start-Process $pobierakbat_main_dir\pobierak.bat
+						EXIT
 					}
 			}
 		else
 			{
-				write-host " "		
+                if ( $sys_lang -eq "PL" )
+                    {
+                        Write-host "!!!WSZYSTKIE OPERACJE ZAKONCZONE SUKCESEM!!!"
+                        SLEEP 3
+                        main_menu
+                    }
+                else
+                    {
+                        Write-host "!!!ALL OPERATIONS SUCCESSFUL!!!"
+                        SLEEP 3
+                        main_menu
+                    }
+						
 			}
     }
 	##############################
@@ -1919,10 +1965,14 @@ Function updates_menu(){
 						sleep 1
 						write-host ""
 						Start-Process $pobierakbat_main_dir\pobierak.bat
+						sleep 1
+                        EXIT
 					}
 				if ( $previous_version -eq 2 )
 					{
 						write-host "WERSJA NIE ZOSTANIE PRZYWROCONA" -ForegroundColor red
+                        SLEEP 3
+                        main_menu
 					}
 			}
 		else
@@ -1948,10 +1998,14 @@ Function updates_menu(){
 						sleep 1
 						write-host ""
 						Start-Process $pobierakbat_main_dir\pobierak.bat
+						sleep 1
+                        EXIT
 					}
 				if ( $previous_version -eq 2 )
 					{
 						write-host "THE PREVIOUS VERSION WILL NOT BE RESTORED." -ForegroundColor red
+                        SLEEP 3
+                        main_menu                                                                                                
 					}
 			}
 	
