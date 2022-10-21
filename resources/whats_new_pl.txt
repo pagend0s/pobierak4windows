@@ -1,11 +1,4 @@
-wersja 3.014
+wersja 3.015
 
--dodana automatyczna obsluga jezyka angielskiego lub polskiego: teraz jesli korzystasz z windows po angielsku to interfejs POBIERAKA rowniez bedzie po angielsku
--znacznie ulepszony filtr linkow: jesli zostanie wykryty channel to nastapi proba jego korekcji
--Sciaganie FFMPEG oraz YT-dlp.exe znacznie przyspieszone
--poprawienie bledow logicznych
--konwersja Audio w 320K a nie jak poprzednio (co bylo bledem) 360K
--Kilka zmian w rejonie aktualizacji
--poprawionych kilka bledow skladniowych
--dodanie komentarzy do skryptu
--lepsza czytelnosc skryptu
+-na zyczenie jednego z uzytkownikow otwieranie pobieraka w normalnym oknie
+-usuniecie odwolania do pustej wartosci dla zmiennej $testlink 
