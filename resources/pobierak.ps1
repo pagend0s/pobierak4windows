@@ -1,4 +1,4 @@
-$pobierak_v = "3.014"
+$pobierak_v = "3.015"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -221,7 +221,6 @@ Function Select-Folder
 function filter_links(){
 	if ( $sys_lang -eq "PL" )
 		{
-			$testlink = "$line"
 			$ignore_link = 0
 			#SEARCH PATTERN FOR PLAYLIST
 			$yt_link_filter_plli = $testlink | Select-String -pattern "&list"
