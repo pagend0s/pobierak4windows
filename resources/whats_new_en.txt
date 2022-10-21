@@ -1,11 +1,4 @@
-version 3.014
+version 3.015
 
--added automatic English or Polish language support: now if you use windows in English or other, the POBIERAK interface will also be in English
--significantly improved link filter: if a channel is detected, POBIERAK will try to correct it
--FFMPEG and YT-dlp.exe downloads speed up significantly
--fixed logical errors
--Audio conversion in 320K, not 360K as before (which was a mistake)
--fixed some syntax bugs
--A few changes in the update area
--adding comments to the script
--better script readability
+-empty definition for variable removed
+-at the request of one of the users, opening the downloader in a normal window
