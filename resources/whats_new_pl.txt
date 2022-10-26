@@ -1,4 +1,3 @@
-wersja 3.015
-
--na zyczenie jednego z uzytkownikow otwieranie pobieraka w normalnym oknie
--usuniecie odwolania do pustej wartosci dla zmiennej $testlink 
+wersja 3.016
+26.10.2022 08:00
+-korekta niepoprawnie ustawionego nawiasu zamykającego warunek, opcja 5, jezyk pl
