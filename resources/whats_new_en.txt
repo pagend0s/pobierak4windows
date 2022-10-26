@@ -1,4 +1,3 @@
-version 3.015
-
--empty definition for variable removed
--at the request of one of the users, opening the downloader in a normal window
+version 3.016
+26.10.2022
+-correction of incorrectly set closing parenthesis of the condition, option 5, language pl
