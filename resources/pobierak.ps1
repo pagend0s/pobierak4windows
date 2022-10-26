@@ -1,4 +1,4 @@
-$pobierak_v = "3.015"
+$pobierak_v = "3.016"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1214,7 +1214,7 @@ cls
 							write-host " "
 							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"	
 						}					
-					
+				}	
 			else
 				{
 					ForEach ($a in $c)
@@ -1228,9 +1228,9 @@ cls
 						}
 						
 				}
-			}
-			Remove-Item -Path "$recources_main_dir\songs.txt"
 		}
+		Remove-Item -Path "$recources_main_dir\songs.txt"
+		
 	
      if ( $sys_lang -eq "PL" )
 		{
