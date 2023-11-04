@@ -8,5 +8,8 @@ Jest to wrapper na console napisany w powershell uzywajacy skompilowanego yt-dlp
 
 ![obraz](https://github.com/pagend0s/pobierak4windows/assets/65870887/e711a95a-3e7c-469e-9072-4ae140504521)
 
+# Support. A few cents for coffee
+https://www.buymeacoffee.com/pagend0s
 
+# Wsparcie. Kilka centów za kawę
 https://www.buymeacoffee.com/pagend0s
