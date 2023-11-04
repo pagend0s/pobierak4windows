@@ -6,4 +6,5 @@ This is a powershell wrapper for console using compiled yt-dlp.exe available at 
 
 Jest to wrapper na console napisany w powershell uzywajacy skompilowanego yt-dlp.exe dostepnego na https://github.com/yt-dlp/yt-dlp. Automatyzuje czesc najbardziej przydatnych komend pomagajacych sciagnac pliki lub filmy z Youtube. Wykorzystuje dodatkowo FFMPEG dostepny na https://github.com/GyanD/codexffmpeg do konwersji sciagnietych multimediow Napisany z wlasnych potrzeb, skutecznie zastepuje platne programy z zamknietych zrodel jak rowniez poderzane wtyczki lub strony internetowe. Udostepniam go za darmo, dzieki dla GyanD oraz yt-dlp TEAM za napisanie glownego programu "yt-dlp" i jego rozwijanie bez ktorego ten wrapper pewnie by nie powstal
 
-![obraz](https://github.com/pagend0s/pobierak4windows/assets/65870887/e711a95a-3e7c-469e-9072-4ae140504521)
+![obraz](https://github.com/pagend0s/pobierak4windows/assets/65870887/b48e80dc-30d4-48d8-ac2d-8f74fd3fbed6)
+
