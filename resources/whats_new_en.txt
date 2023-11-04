@@ -1,3 +1,4 @@
-version 3.017
-01.04.2023
-FFMPEG source link update to  ffmpeg-6.0
+version 3.018
+04.11.2023
+FFMPEG source link update to N-112664-g9dd49c8b52-20231103 
+from BtbN previous GyanD
