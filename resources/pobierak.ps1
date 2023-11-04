@@ -1,4 +1,4 @@
-$pobierak_v = "3.017"
+$pobierak_v = "3.018"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1808,7 +1808,7 @@ Function updates_menu(){
 			}
 		#DONWLOAD NEW FFMPEG REPO FROM GITHUB GyanD TO ffmpeg.zip
 		
-        Start-BitsTransfer -Source "https://github.com/GyanD/codexffmpeg/releases/download/6.0/ffmpeg-6.0-essentials_build.zip" -Destination "$recources_main_dir\ffmpeg.zip"
+        Start-BitsTransfer -Source "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -Destination "$recources_main_dir\ffmpeg.zip"
 		
 		if ( $sys_lang -eq "PL" )
 			{
