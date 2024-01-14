@@ -1,4 +1,4 @@
-$pobierak_v = "3.018"
+$pobierak_v = "3.1"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -17,6 +17,7 @@ function get_lang(){
 #$sys_lang = "Polski"
 [string]$language = get_lang
 #SYS LANG IF PL THEN PL IF OTHER THEN EN
+
 if (( $language -eq "pl-PL" ) -or ( $language -eq "Polski"))
     {
         $sys_lang = "PL"
@@ -49,6 +50,17 @@ $pobierakbat_main_dir =  $recources_main_dir -replace 'Resources',''
 $yt_dlp = "$recources_main_dir\yt-dlp.exe"
 #SET ffmpeg LOCATION
 $ffmpeg = "$recources_main_dir\ffmpeg\bin\ffmpeg.exe"
+
+function play_sound(){
+	
+	$PlayWav=New-Object System.Media.SoundPlayer
+
+	$PlayWav.SoundLocation="$recources_main_dir\Bottle.wav"
+
+	$PlayWav.playsync()
+	
+}
+
 
 #FUNCTION TO DISPLAY MAIN INFORMATION IN FIRST MENU
 Function internal_info(){
@@ -2146,6 +2158,7 @@ if ( $sys_lang -eq "PL" )
 			Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "Pobierak wersja: " ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
 			write-host ""
 			internal_info
+			play_sound
 			Write-Host ""
 			Write-Host "	1: SCIAGNIJ ILE CHCESZ POJEDYNCZYCH LINKOW." -ForegroundColor Magenta
 			Write-Host ""
@@ -2201,6 +2214,7 @@ else
 			Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), "Pobierak version: " ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
 			write-host ""
 			internal_info
+			play_sound
 			Write-Host ""
 			Write-Host "	1: DOWNLOAD FROM YT LINKS PASTED ONE AFTER ANOTHER." -ForegroundColor Magenta
 			Write-Host ""
