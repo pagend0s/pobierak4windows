@@ -1,4 +1,4 @@
-$pobierak_v = "3.11"
+$pobierak_v = "3.12"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1726,12 +1726,9 @@ Function updates_menu(){
 								Remove-Item $recources_main_dir\pobierak_primary.ps1 -Force 
 							}
 					}         
-                Copy-Item  -Path $recources_main_dir\pobierak.ps1 $recources_main_dir\pobierak_bak.ps1	#FOR BACKUP PURPOSES pobierak.ps1 IS COPIED AND RENAMED TO pobierak_bak.ps1 
-                Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1	#COPY NEW VERSION OF POBIERAK TO MAIN DIR
-                Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\pobierak.bat $pobierakbat_main_dir\pobierak.bat			#COPY NEW pobierak.bat	TO MAIN DIR
-		Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\Bottle.wav $recources_main_dir\Bottle.wav				#COPY SOUND
-		Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new_pl.txt $pobierakbat_main_dir\whats_new_pl.txt #COPY NEWS ABOUT POBIERAK TO TO MAIN DIR
-		Copy-Item  -Path $path_to_temp\pobierak\pobierak4windows-main\resources\whats_new_en.txt $pobierakbat_main_dir\whats_new_en.txt #COPY NEWS ABOUT POBIERAK TO TO MAIN DIR
+                Copy-Item  	-Path $recources_main_dir\pobierak.ps1 $recources_main_dir\pobierak_bak.ps1	#FOR BACKUP PURPOSES pobierak.ps1 IS COPIED AND RENAMED TO pobierak_bak.ps1 
+                Copy-Item  	-Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1	#COPY NEW VERSION OF POBIERAK TO MAIN DIR
+                Copy-Item	-Path $path_to_temp\pobierak\\pobierak4windows-main\*	$pobierakbat_main_dir\ -Recurse
 				
 				if ( $sys_lang -eq "PL" )
 					{
