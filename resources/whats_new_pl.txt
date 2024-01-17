@@ -1,3 +1,2 @@
-version 3.12
-14.01.2024
-dodany dzwiek powitalny ;)
+Version 3.121
+Aktualizacja linku do nejnowszej wersji konvertera FFMPEG 
