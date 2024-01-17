@@ -1,4 +1,4 @@
-$pobierak_v = "3.121"
+$pobierak_v = "3.122"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -1728,7 +1728,7 @@ Function updates_menu(){
 					}         
                 Copy-Item  	-Path $recources_main_dir\pobierak.ps1 $recources_main_dir\pobierak_bak.ps1	#FOR BACKUP PURPOSES pobierak.ps1 IS COPIED AND RENAMED TO pobierak_bak.ps1 
                 Copy-Item  	-Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1	#COPY NEW VERSION OF POBIERAK TO MAIN DIR
-                Copy-Item	-Path $path_to_temp\pobierak\\pobierak4windows-main\*	$pobierakbat_main_dir\ -Recurse
+                Copy-Item	-Path $path_to_temp\pobierak\\pobierak4windows-main\*	$pobierakbat_main_dir\ -Recurse -ErrorAction SilentlyContinue
 				
 				if ( $sys_lang -eq "PL" )
 					{
