@@ -1,2 +1,3 @@
-Version 3.121
+Version 3.122
 Updated FFMPEG link to the latest version
+Minor improvement to prompts
