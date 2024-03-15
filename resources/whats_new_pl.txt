@@ -1,3 +1,2 @@
-Version 3.122
-Aktualizacja linku do nejnowszej wersji konvertera FFMPEG 
-Niewielkie ulepszenia podpowiedzi
+Version 3.2
+Ustawienie zmiennej dla linków jako drugiego parametru argumentów w start-process w celu poprawnego działania skryptu powershell z wersją PowerShell 5.1.19041.1620
