@@ -1,3 +1,2 @@
-Version 3.122
-Updated FFMPEG link to the latest version
-Minor improvement to prompts
+Version 3.2
+Setting the link variable as the second argument parameter in start-process for the powershell script to work properly with PowerShell version 5.1.19041.1620
