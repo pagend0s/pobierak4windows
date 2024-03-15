@@ -1,4 +1,4 @@
-$pobierak_v = "3.122"
+$pobierak_v = "3.2"
 #GET SYS LANG
 function get_lang(){
 	$regkey = "HKCU:\Control Panel\Desktop"
@@ -470,7 +470,7 @@ cls
 					$song_left = [int]$xyz++ #COUNTER FOR SONGS TO DOWNLOAD
 					[int]$lines_var-= 1 #SUB - HOW MANY LEFT
 					write-host "ZACIAGANIE AUDIO LINK NR: $song_left . POZOSTALO: $lines_var ." -ForegroundColor yellow
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 				}
 			#REMOVE PATH WITH SONG LIST CREATED AFTER DOWNLOAD LOOP
 			Remove-Item -Path "$recources_main_dir\songs_out.txt" -Force
@@ -520,7 +520,7 @@ cls
 					$song_left = [int]$xyz++	#COUNTER FOR SONGS TO DOWNLOAD
 					[int]$lines_var-= 1	#SUB - HOW MANY LEFT
 					write-host "PULLING AN AUDIO LINK NR: $song_left . REMAIN: $lines_var ." -ForegroundColor yellow
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 				}
 			#REMOVE PATH WITH SONG LIST CREATED AFTER DOWNLOAD LOOP
 			Remove-Item -Path "$recources_main_dir\songs_out.txt" -Force
@@ -614,7 +614,7 @@ Function download_from_list(){
 					write-host " "
 					write-host "PULLING AN AUDIO LINK NR: $xyz . REMAIN: $lines_var ." -ForegroundColor yellow
 				}
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $h"
+			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$h"
 		}
 		
 	Remove-Item -Path "$recources_main_dir\songs_out.txt"
@@ -681,7 +681,7 @@ Function download_playlist(){
 	#SHOW OWER WINDWOS EXPLORER THE TARGET DIR
     Start explorer.exe $output_directory
 	#MAIN DOWNLOAD PROCESS
-    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s $playlist_ID_yt "
+    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$playlist_ID_yt"
 
 	if ( $sys_lang -eq "PL" )
 		{
@@ -742,7 +742,7 @@ Function download_channel(){
 			sleep 2
 		}
 	#MAIN DOWNLOAD PROCESS
-    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location ""$ffmpeg"" --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $channel_ID_yt "
+    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location ""$ffmpeg"" --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$channel_ID_yt"
 	
 	if ( $sys_lang -eq "PL" )
 		{
@@ -933,11 +933,11 @@ cls
 								$xyz++
 								write-host " "
 								write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 								write-host " "
 								write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor cyan
 								write-host " "
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 							}
 					}
 				if ( $audio_yes_no -eq 2 )
@@ -949,7 +949,7 @@ cls
 								write-host " "
 								write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
 								write-host " "
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 							}
 					}
 			}
@@ -963,11 +963,11 @@ cls
 								$xyz++
 								write-host " "
 								write-host "PULLING AN AUDIO LINK NR: $xyz . REMAIN: $lines_var." -ForegroundColor yellow
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 								write-host " "
 								write-host "PULLING AN VIDEO LINK NR: $xyz . REMAIN: $lines_var" -ForegroundColor cyan
 								write-host " "
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 							}
 					}
 				if ( $audio_yes_no -eq 2 )
@@ -979,7 +979,7 @@ cls
 								write-host " "
 								write-host "PULLING AN VIDEO LINK NR: $xyz . REMAIN: $lines_var." -ForegroundColor yellow
 								write-host " "
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 							}
 					}
 			}
@@ -1002,11 +1002,11 @@ cls
 									$xyz++
 									write-host " "
 									write-host "ZACIAGANIE AUDIO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 									write-host " "
 									write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor cyan
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 								}
 						}
 					if ( $audio_yes_no -eq 2 )
@@ -1018,7 +1018,7 @@ cls
 									write-host " "
 									write-host "ZACIAGANIE VIDEO LINK NR: $xyz . POZOSTALO: $lines_var ." -ForegroundColor yellow
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"					
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$a"					
 								}
 						}
 				}
@@ -1032,11 +1032,11 @@ cls
 									$xyz++
 									write-host " "
 									write-host "PULLING AN AUDIO LINK NR: $xyz . REMAIN: $lines_var." -ForegroundColor yellow
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 									write-host " "
 									write-host "PULLING AN VIDEO LINK NR: $xyz . REMAIN: $lines_var ." -ForegroundColor cyan
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s $a"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 								}
 						}
 					if ( $audio_yes_no -eq 2 )
@@ -1048,7 +1048,7 @@ cls
 									write-host " "
 									write-host "PULLING AN VIDEO LINK NR: $xyz . REMAIN: $lines_var ." -ForegroundColor yellow
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s $a"					
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$a"					
 								}
 						}
 					
@@ -1190,11 +1190,11 @@ cls
 						{	
 							write-host " "
 							write-host "ZACIAGANIE AUDIO." -ForegroundColor yellow
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 							write-host " "
 							write-host "ZACIAGANIE VIDEO." -ForegroundColor cyan
 							write-host " "
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 						}
 				}
 			else
@@ -1203,11 +1203,11 @@ cls
 						{
 							write-host " "
 							write-host "PULLING AN AUDIO" -ForegroundColor yellow
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 							write-host " "
 							write-host "PULLING AN VIDEO" -ForegroundColor cyan
 							write-host " "
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s " , "$a"
 						}
 					Remove-Item -Path "$recources_main_dir\songs.txt"	
 				}
@@ -1224,7 +1224,7 @@ cls
 							write-host " "
 							write-host "ZACIAGANIE VIDEO." -ForegroundColor yellow
 							write-host " "
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"	
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s "	, "$a" 
 						}					
 				}	
 			else
@@ -1236,7 +1236,7 @@ cls
 							write-host " "
 							write-host "PULLING AN VIDEO" -ForegroundColor yellow
 							write-host " "
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s $a"	
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --output ""$output_directory""\%(title)s.%(ext)s "	, "$a"
 						}
 						
 				}
@@ -1487,12 +1487,12 @@ cls
 									write-host "NAJPIERW ZOSTANIE SCIAGNIETE AUDIO " -ForegroundColor yellow
 									write-host "SCIAGANIE AUDIO W TOKU.." -ForegroundColor yellow
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$x"
 									write-host " "
 									write-host "SCIAGANIE AUDIO ZAKONCZONE! " -ForegroundColor yellow
 									write-host "SCIAGANIE VIDEO W TOKU.." -ForegroundColor yellow
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$x"
 									write-host " "
 									write-host "SCIAGANIE VIDEO ZAKONCZONE! " -ForegroundColor yellow
 								}
@@ -1504,7 +1504,7 @@ cls
 						write-host " "
 						write-host "SCIAGANIE VIDEO W TOKU.." -ForegroundColor cyan
 						write-host " "
-						Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+						Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$x"
 						write-host " "
 						write-host "SCIAGANIE VIDEO ZAKONCZONE! " -ForegroundColor cyan
 					}
@@ -1518,7 +1518,7 @@ cls
 							write-host " "
 					write-host "SCIAGANIE AUDIO W TOKU.." -ForegroundColor yellow
 					write-host " "
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" $y"
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$y"
 					write-host " "
 					write-host "SCIAGANIE AUDIO ZAKONCZONE! " -ForegroundColor yellow
 						}
@@ -1542,12 +1542,12 @@ cls
 									write-host "AUDIO WILL BE DOWNLOADED FIRST " -ForegroundColor yellow
 									write-host "DOWNLOADING AUDIO IN PROGRESS.." -ForegroundColor yellow
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$x"
 									write-host " "
 									write-host "AUDIO DOWNLOAD COMPLETED!" -ForegroundColor yellow
 									write-host "VIDEO DOWNLOAD IN PROGRESS.." -ForegroundColor yellow
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$x"
 									write-host " "
 									write-host "VIDEO DOWNLOAD FINISHED!" -ForegroundColor yellow
 								}
@@ -1559,7 +1559,7 @@ cls
 									write-host " "
 									write-host "VIDEO DOWNLOAD IN PROGRESS.." -ForegroundColor cyan
 									write-host " "
-									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" $x"
+									Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$x"
 									write-host " "
 									write-host "VIDEO DOWNLOAD FINISHED!" -ForegroundColor cyan
 								}
@@ -1573,7 +1573,7 @@ cls
 							write-host " "
 					write-host "DOWNLOADING AUDIO IN PROGRESS.." -ForegroundColor yellow
 					write-host " "
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" $y"
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$y"
 					write-host " "
 					write-host "AUDIO DOWNLOAD COMPLETED!" -ForegroundColor yellow
 						}
