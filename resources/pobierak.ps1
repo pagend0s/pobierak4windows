@@ -73,7 +73,7 @@ Function internal_info(){
 	$recources_test= @() ;
 	$recources_test[0] ;
 	#VARIABLES FOR TEST IF NECESSARY EXE EXISTS
-	$test_resource_ffmpeg_if_exist = "$recources_main_dir\ffmpeg" ;
+	$test_resource_ffmpeg_if_exist = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe" ;
 	$test_resource_yt_dlp_if_exist = "$recources_main_dir\yt-dlp.exe" ;
 	#IF TEST VER ARE EMPTY THEN IS NO ERROR ELSE THERE IS A PROBLEM WITH MAIN SCRIPT
 	if (( $process_bak_id -eq $null -and $process_bak_primary_id -eq $null ))
