@@ -1,4 +1,4 @@
-$pobierak_v = "3.41"
+$pobierak_v = "3.42"
 
 #GET SYS LANG
 function get_lang(){
@@ -40,7 +40,7 @@ $pobierakbat_main_dir =  $recources_main_dir -replace 'Resources','' ;
 #SET YT-DLP LOCATION
 $yt_dlp = "$recources_main_dir\yt-dlp.exe" ;
 #SET ffmpeg LOCATION
-$ffmpeg = "$recources_main_dir\ffmpeg\bin\ffmpeg.exe" ;
+$ffmpeg = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe" ;
 
 #SYS LANG IF PL THEN PL IF OTHER THEN EN
 
@@ -1018,22 +1018,15 @@ Function updates_menu(){
 		
 		
 		#FIND ZIP WITH FFMPEG IN MAIN DIR AND EXPAND ARCHIVE TO MAIN DIR\ffmpeg
-        Get-ChildItem $recources_main_dir -Filter *.zip | Expand-Archive -DestinationPath $recources_main_dir\ffmpeg -Force
+        Get-ChildItem $recources_main_dir -Filter *.zip | ForEach { Expand-Archive -Path $_.FullName -DestinationPath $recources_main_dir\ffmpeg -Force}
+		
 		#DELETE DOWNLOADED ZIP WITH FFMPEG AFTER EXTRACTION
         Get-ChildItem $recources_main_dir -Filter *.zip | Remove-Item
 		#SET EXTRACTED DIR
         $recources_main_dir_unzipped = "$recources_main_dir\ffmpeg"	
 		#FIND EXTRACTED FOLDER NAME AND COPY IT TO MAIN DIR"
-        $unzipped_dir = get-ChildItem -Path $recources_main_dir_unzipped -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Move-Item -Destination $recources_main_dir
-        #DELETE UNZIPPED DIR WITH DOWNLOADED NAME IN MAINDIR\FFMPEG
-        Remove-Item $recources_main_dir_unzipped -Force -Recurse
-		
-		Write-Host $text_msg.ffmpgupd03 -ForegroundColor green
-		
-		#RENAME COPIED DIR WITH DOWNLOADED AND COPIED FFMPEG TO ffmpeg
-        $unzipped_dir = get-ChildItem -Path $recources_main_dir -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -newname ffmpeg
-        
-		Write-Host $text_msg.ffmpgupd04 -ForegroundColor green
+        $unzipped_dir = get-ChildItem -Path $recources_main_dir_unzipped -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -NewName ffmpeg
+		Write-Host $text_msg.ffmpgupd03`n,$text_msg.ffmpgupd04 -ForegroundColor green
 
     }
 	#######################
