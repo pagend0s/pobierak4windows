@@ -5,7 +5,7 @@ pushd %~dp0
 
 echo "STARTING POBIERAK"
 
-powershell -WindowStyle Normal -ExecutionPolicy Bypass -File .\resources\pobierak.ps1
+powershell -WindowStyle Normal -ExecutionPolicy Bypass -File .\resources\pobierak.ps1 2>.\resources\Error\error.txt
 
 IF %ERRORLEVEL% EQU 0 (GOTO EXIT) ELSE (GOTO after_error)
 
