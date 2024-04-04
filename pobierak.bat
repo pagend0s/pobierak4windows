@@ -3,14 +3,13 @@
 :PowerShell2
 pushd %~dp0
 
-echo "STARTING POBIERAK"
-
 IF exist ".\resources\Error" ( 
-		GOTO HISTORY_FILE_0
+		GOTO StartPobierak
 		)	ELSE	(
 		mkdir ".\resources\Error"
 		)
-
+:StartPobierak
+echo "STARTING POBIERAK"
 powershell -WindowStyle Normal -ExecutionPolicy Bypass -File .\resources\pobierak.ps1 2>.\resources\Error\error.txt
 
 IF %ERRORLEVEL% EQU 0 (GOTO EXIT) ELSE (GOTO after_error)
