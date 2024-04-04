@@ -911,7 +911,7 @@ Function updates_menu(){
 					{
 						$whats_new = (Get-Content "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\en-US\pobierak.psd1"  | Select-String "news00" | Out-String)
 					}
-				$whats_new.split("-").trim() -ne ""			
+				$whats_new.split(";").trim() -ne ""			
 				do
 					{
 						Write-Host ""
