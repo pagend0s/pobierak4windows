@@ -137,7 +137,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = -3.43 updated hardcoded url for FFMPEG version 7.0 ; -Significant improvements in language handling thanks to the the B.A ; -slightly improved filter for detecting playlists in links ; -improved code readability and variable handling ; -significant shortening of the code ; -improved error handling
+	news00 = -3.43 Improved cookie extraction from edge and chrome ; fixed errors in the information area ; -slightly improved filter for detecting playlists in links
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER THE CORRECT VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
