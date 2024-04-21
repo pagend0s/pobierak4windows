@@ -1,4 +1,4 @@
-﻿#internal_info
+#internal_info
 ConvertFrom-StringData @'
 	internalinfo0 = AKTUALNA WERSJA YOUTUBE-DLP:
 	warning = !!! UWAGA UWAGA UWAGA !!!
@@ -97,15 +97,15 @@ ConvertFrom-StringData @'
 	downloadplaylistintro = WYBRALES OPCJE NUMER 3. POBIERANIE AUDIO Z PLAYLISTY.
 	downloadplaylistinfo0 = W CELU SCIAGNIECIA CALEY PLYLISTY NIEZBEDNY JEST JEJ IDENTYFIKATOR.
 	downloadplaylistinfo1 = IDENTYFIKATOR PLAYLISTY ZOSTAL ZAZNACZONY NA ZIELONO W PRZYKLADOWYM LINKU PONIZEJ:
-	downloadplaylistinfo2 = NAJPROSCIEJ SKOPIOWAC CZESC ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU:
+	downloadplaylistinfo2 = NAJPROSCIEJ SKOPIOWAC CALY ADRES URL WRAZ Z ID Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU:
 '@
 
 #downloadchannel
 ConvertFrom-StringData @'
 	downloadchannelintro = WYBRALES OPCJE NUMER 4. POBIERANIE AUDIO Z CALEGO KANALU YT.
-	downloadchannelinfo0 = W CELU SCIAGNIECIA CALEGO KANALU  NIEZBEDNY JEST LINK ZAWIERAJACY PODFOLDER --- channel --- W LINKU.
-	downloadchannelinfo1 = PRZYKLADOWY LINK ZNAJDUJE SIE PONIZEJ
-	downloadchannelinfo2 = NAJPROSCIEJ SKOPIOWAC CALY LINK Z PODFOLDEREM --- channel --- Z PRZEGLADARKI I WCISNAC PRAWY KLAWISZ W TERMINALU:
+	downloadchannelinfo0 = ABY POBRAC CALY KANAL, NIEZBEDNY JEST IDENTYFIKATOR KANALU..
+	downloadchannelinfo1 = ZNAJDZIESZ GO W INFORMACJACH O KANALE: „Wiecej informacji o tym kanale” ORAZ Z MENU KONTEKSTOWEGO „Udostępnij kanal” ORAZ „Kopiuj identyfikator kanalu”
+	downloadchannelinfo2 = PO PROSTU: SKOPIUJ ID KANALU Z PRZEGLĄDARKI I NACIŚNIJ PRAWY KLAWISZ W TERMINALU:
 '@
 
 #downloadmovieandormusicfromlist
@@ -127,6 +127,7 @@ ConvertFrom-StringData @'
 	downloadfromcookiewarn1 = ! PRZY WYBORZE PRZEGLADARKI ZALECA SIE ROZWAGE. POBIERAK (YOUTUBE-DLP) BEDZIE MIAL DOSTEP DO CALEGO PROFILU !
 	downloadfromcookiewarn2 = ! ZALECAM ZALOGOWANIE SIE DO YOUTUBE NA PRZEGLADARCE KTOREJ NIE UZYWA SIE NA CODZIEN I WSKAZANIE WLASNIE JEJ !
 	downloadfromcookiewarn3 = OBSLUGIWANE PRZEGLADARKI TO: chrome ; edge ; firefox.
+	downloadfromcookiewarn4 = !!! WAZNE !!! Po wybraniu przegladarki, w przypadku Chrome i Edge, wszystkie otwarte wczesniej instancje Chrome lub Edge zostana zamkniete, aby ponownie otworzyć Chrome lub Edge w trybie odblokowanych plikow cookie.!!!
 	downloadfromcookieinfo = WPISZ POPRAWNA WARTOSC: chrome LUB edge LUB firefox :
 	downloadfromcookieaudio0 = NAJPIERW ZOSTANIE SCIAGNIETE AUDIO.
 	downloadfromcookieaudio1 = SCIAGANIE AUDIO W TOKU..
@@ -196,5 +197,3 @@ ConvertFrom-StringData @'
 	mainmenu11 = ZATWIERDZ POPRZEZ ENTER:
 
 '@
-
-
