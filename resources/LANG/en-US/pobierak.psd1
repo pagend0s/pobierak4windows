@@ -1,4 +1,4 @@
-﻿#internal_info
+#internal_info
 ConvertFrom-StringData @'
     internalinfo0 = CURRENT VERSION OF YOUTUBE-DLP:
 	warning = !!! WARNING WARNING WARNING !!!
@@ -93,15 +93,15 @@ ConvertFrom-StringData @'
 	downloadplaylistintro = YOU HAVE CHOOSEN OPTIONS NUMBER 3. DOWNLOADING AUDIO FROM YT PLAYLIST.
 	downloadplaylistinfo0 = IN ORDER TO DOWNLOAD THE ENTIRE PLAYLIST, ITS IDENTIFIER IS NECESSARY.
 	downloadplaylistinfo1 = THE PLAYLIST ID WAS MARKED IN GREEN IN THE EXAMPLE LINK BELOW:
-	downloadplaylistinfo2 = SIMPLY: COPY THE ID PART FROM THE BROWSER AND PRESS THE RIGHT KEY IN THE TERMINAL:
+	downloadplaylistinfo2 = SIMPLY: COPY WHOLE URL WITH ID FROM THE BROWSER AND PRESS THE RIGHT KEY IN THE TERMINAL:
 '@
 
 #downloadchannel
 ConvertFrom-StringData @'
 	downloadchannelintro = YOU HAVE CHOOSEN OPTIONS NUMBER 4. DOWNLOADING AUDIO FROM WHOLE YT CHANNEL
-	downloadchannelinfo0 = IN ORDER TO DOWNLOAD AN ENTIRE CHANNEL, A YT LINK CONTAINING A SUBFOLDER --- channel --- IS NECESSARY.
-	downloadchannelinfo1 = AN EXAMPLE OF A LINK IS BELOW:
-	downloadchannelinfo2 = SIMPLY: COPY AN ENTIRE LINK WITH A SUBFOLDER --- channel --- FROM THE BROWSER AND PRESS THE RIGHT KEY IN THE TERMINAL:
+	downloadchannelinfo0 = IN ORDER TO DOWNLOAD AN ENTIRE CHANNEL, A CHANNEL ID IS NECESSARY.
+	downloadchannelinfo1 = YOU CAN FIND IT IN CHANNEL INFORMATION: "More about this channel" AND FROM THE CONTEXT MENU "Share this channel" AND "Copy Channel ID"
+	downloadchannelinfo2 = SIMPLY: COPY CHANNEL ID FROM THE BROWSER AND PRESS THE RIGHT KEY IN THE TERMINAL:
 '@
 
 #downloadmovieandormusicfromlistorterminal
@@ -123,6 +123,7 @@ ConvertFrom-StringData @'
 	downloadfromcookiewarn1 = ! BE CAREFUL WHEN CHOOSING YOUR BROWSER. POBIERAK (YOUTUBE-DLP) WILL HAVE ACCESS TO THE ENTIRE PROFILE !
 	downloadfromcookiewarn2 = ! I RECOMMEND LOG IN TO YOUTUBE ON A BROWSER WHICH YOU DO NOT USE ON EVERYDAY !
 	downloadfromcookiewarn3 = SUPPORTED BROWSERS: chrome ; edge ; firefox.
+	downloadfromcookiewarn4 = !!! IMPORTANT !!! After selecting the browser, in the case of Chrome and Edge, all previously open Chrome or Edge instances will be closed in order to reopen Chrome or Edge in the unlocked cookie mode.
 	downloadfromcookieinfo = ENTER THE CORRECT VALUE: chrome OR edge OR firefox :
 	downloadfromcookieaudio0 = AUDIO WILL BE DOWNLOADED FIRST.
 	downloadfromcookieaudio1 = DOWNLOADING AUDIO IN PROGRESS..
