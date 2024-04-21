@@ -140,7 +140,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = -3.43 zaktualizowany url dla FFMPEG wersja 7.0 ; -Znaczace ulepszenia w obsludze jezyka dzieki B.A. ; -nieco ulepszony filtr do wykrywania playlist w linkach ; -poprawiona czytelnosc kodu oraz obsluga zmiennych ; -znaczace skrocenie kodu ; -poprawiona obluga bledow
+	news00 = -3.44 Poprawiona extrakcja plikow cookie z edge i chrome ; poprawione bledy w obszarze informacji ; -nieco ulepszony filtr do wykrywania playlist w linkach
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
