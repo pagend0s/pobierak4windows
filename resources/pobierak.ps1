@@ -1,4 +1,4 @@
-$pobierak_v = "3.44"
+$pobierak_v = "3.45"
 
 #GET SYS LANG
 function get_lang(){
@@ -355,10 +355,10 @@ cls
 			
 		#VAR WITH ENTERED YT LINKS
 		$source = Get-Content -Path "$recources_main_dir\songs_out.txt" | Where { $_ }
-		##$c = $c.trim() -ne ""
+		
 		#LINES COUNTER
 		$lines_var = Get-Content "$recources_main_dir\songs_out.txt" | Where { $_ }
-		##$lines_var = $lines_var.trim() -ne ""
+		
     	[int]$lines_var = $lines_var.Count
 		#PATH TO OUTPUT DIR
 		$output_directory = Select-Folder
@@ -399,7 +399,7 @@ Function download_from_list(){
     $selected_file_var = Select-File
 	#REMOVE EMPTY LINES IF EXIST
     $d = Get-Content -Path $selected_file_var | Where { $_ }
-	##$d = $d.trim() -ne ""
+	
                            
 	foreach ( $line in $d )
 		{
@@ -430,8 +430,7 @@ Function download_from_list(){
 	$selected_file_var = "$recources_main_dir\songs_out.txt"
 	#PARSE FILE CONTENT
 	$source = Get-Content -Path $selected_file_var
-	#REMOVE EMPTY LINES IF EXIST
-	$d = $d.trim() -ne ""
+	
 	#MAIN LOOP FOR DOWNLOAD
 	ForEach ($track in $source) 
 		{
@@ -534,18 +533,14 @@ Function download_movie_and_or_music_from_list(){
 			warning_select_file
 			$selected_file_var = Select-File
 			#GET LINKS FROM THE TXT FILE
-			#Get-Content -Path $selected_file_var
 
 			$source = Get-Content -Path $selected_file_var | Where { $_ }
-			##$d = $d.trim() -ne ""
+			
 			foreach ( $line in $source )
 				{
 					$testlink = $line
 					filter_links	#FILTER PARSED LINKS FROM FILE					
 				}
-			
-			#$source = Get-Content -Path "$recources_main_dir\songs_out.txt"
-			##$d = $d.trim() -ne ""
 		}
 	elseif ( $list_console -eq 2)
 		{
@@ -568,7 +563,7 @@ Function download_movie_and_or_music_from_list(){
 		}
 	#SET PATH FOR LINK LIST
 	$source = Get-Content -Path "$recources_main_dir\songs_out.txt" | Where { $_ }
-	$source = $source.trim() -ne ""
+	
 	
 	$viedo_format = video_format
 	$audio_yes_no = audio_0_1
@@ -746,13 +741,11 @@ cls
 		{
 			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Roaming\Mozilla\Firefox\Profiles"
 			$latest_profile = Get-ChildItem -Path $dir_4_borowser_cookies | Sort-Object LastAccessTime -Descending | Select-Object -First 1
-			#$latest_profile
 		}
 	elseif ( $web_browser -eq "edge" )
 		{
 		
 			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Microsoft\Edge\User Data\Default"
-			#$latest_profile = Get-ChildItem -Path $dir_2_fox_profile | Sort-Object LastAccessTime -Descending | Select-Object -First 1
 			$latest_profile = $dir_4_borowser_cookies
 			Stop-Process -Name "msedge" -ErrorAction SilentlyContinue
 			Start-Process -FilePath ("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") -ArgumentList "--disable-features=LockProfileCookieDatabase"
@@ -761,7 +754,6 @@ cls
 	if ( $web_browser -eq "chrome" )
 		{
 			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Google\Chrome\User Data\Default"
-			#$latest_profile = Get-ChildItem -Path $dir_2_fox_profile | Sort-Object LastAccessTime -Descending | Select-Object -First 1
 			$latest_profile = $dir_4_borowser_cookies	
 			Stop-Process -Name "chrome" -ErrorAction SilentlyContinue
 			Start-Process -FilePath ("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") -ArgumentList "--disable-features=LockProfileCookieDatabase"
