@@ -1,4 +1,4 @@
-$pobierak_v = "3.45"
+$pobierak_v = "3.451"
 
 #GET SYS LANG
 function get_lang(){
@@ -953,7 +953,8 @@ Function updates_menu(){
 						Write-Host ""
 						SLEEP 5
 						Start-Process $pobierakbat_main_dir\pobierak.bat #START NEW POBIERAK VERSION
-						EXIT
+      						sleep 1
+						EXIT 0
 					}			
 			}
         else
@@ -1038,7 +1039,8 @@ Function updates_menu(){
 				Write-Host ""
 				SLEEP 5
 				Start-Process $pobierakbat_main_dir\pobierak.bat 
-				EXIT				
+    				sleep 1
+				EXIT 0			
 			}
 		else
 			{
@@ -1072,7 +1074,7 @@ Function updates_menu(){
 						write-host ""
 						Start-Process $pobierakbat_main_dir\pobierak.bat
 						sleep 1
-                        EXIT
+                        			EXIT 0
 					}
 				if ( $previous_version -eq 2 )
 					{
