@@ -140,7 +140,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = -3.44 Poprawiona extrakcja plikow cookie z edge i chrome ; poprawione bledy w obszarze informacji ; -nieco ulepszony filtr do wykrywania playlist w linkach
+	news00 = -3.45 ; opcja nr 5 w menu - sciaganie video znow dziala ; Poprawiona extrakcja plikow cookie z edge i chrome ; poprawione bledy w obszarze informacji
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
