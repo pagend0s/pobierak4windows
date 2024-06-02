@@ -140,7 +140,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.452 poprawiona nazwa zmiennej qualit w opcji 7 -> quality ; opcja nr 5 w menu - sciaganie video znow dziala ; Poprawiona extrakcja plikow cookie z edge i chrome ; poprawione bledy w obszarze informacji
+	news00 = 3.453 poprawa exit po aktualizacji ; poprawiona nazwa zmiennej qualit w opcji 7 -> quality ; opcja nr 5 w menu - sciaganie video znow dziala ; Poprawiona extrakcja plikow cookie z edge i chrome ; poprawione bledy w obszarze informacji
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
