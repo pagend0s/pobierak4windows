@@ -1,4 +1,4 @@
-$pobierak_v = "3.453"
+$pobierak_v = "3.454"
 
 #GET SYS LANG
 function get_lang(){
@@ -76,7 +76,7 @@ Function internal_info(){
 	$test_resource_ffmpeg_if_exist = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe" ;
 	$test_resource_yt_dlp_if_exist = "$recources_main_dir\yt-dlp.exe" ;
 	#IF TEST VER ARE EMPTY THEN IS NO ERROR ELSE THERE IS A PROBLEM WITH MAIN SCRIPT
-	if (( $process_bak_id -eq $null -and $process_bak_primary_id -eq $null ))
+	if (( $process_bak_id -eq $null ) -and ( $process_bak_primary_id -eq $null ))
 		{
 			$critical_update_error = " " ;
 		}
@@ -952,9 +952,7 @@ Function updates_menu(){
 						Write-Host $text_msg.checkpobierakversionupd03
 						Write-Host ""
 						SLEEP 5
-						Start-Process $pobierakbat_main_dir\pobierak.bat  -ArgumentList "-noexit" #START NEW POBIERAK VERSION
-      						sleep 1
-						[Environment]::Exit(0)
+						Exit(3)
 					}			
 			}
         else
@@ -1038,9 +1036,7 @@ Function updates_menu(){
 				$text_msg.checkpobierakversionupd03
 				Write-Host ""
 				SLEEP 5
-				Start-Process $pobierakbat_main_dir\pobierak.bat -ArgumentList "-noexit" 
-    				sleep 1
-				[Environment]::Exit(0)			
+				Exit(3)		
 			}
 		else
 			{
