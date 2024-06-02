@@ -1,4 +1,4 @@
-$pobierak_v = "3.451"
+$pobierak_v = "3.452"
 
 #GET SYS LANG
 function get_lang(){
@@ -805,7 +805,7 @@ cls
 					write-host " "
 					(write-host $text_msg.downloadfromcookieaudio0`n,$text_msg.downloadfromcookieaudio1 -ForegroundColor yellow)
 					write-host " "
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
 					write-host " "
 					(write-host $text_msg.downloadfromcookieaudio2 -ForegroundColor yellow)
 					(write-host $text_msg.downloadfromcookievideo0`n -ForegroundColor yellow)
@@ -831,7 +831,7 @@ cls
 			write-host " "
 			(write-host $text_msg.downloadfromcookieaudio1 -ForegroundColor yellow)
 			write-host " "
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$qualit"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
+			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
 			write-host " "
 			(write-host $text_msg.downloadfromcookieaudio2 -ForegroundColor yellow)
 								
