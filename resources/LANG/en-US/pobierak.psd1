@@ -137,7 +137,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = 3.453 fix for exit after update ; fixed variable name in option 7 qualit -> quality ; option no. 5 in the menu - video downloading works again ; Improved cookie extraction from edge and chrome ; fixed errors in the information area ;
+	news00 = 3.454 fix for exit after update ; fixed variable name in option 7 qualit -> quality ; option no. 5 in the menu - video downloading works again ; Improved cookie extraction from edge and chrome ; fixed errors in the information area ;
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER THE CORRECT VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
