@@ -141,7 +141,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = 3.46 -Additional information after first launch -some unused variables were removed -small change in ffmpeg unpacking method
+	news00 = 3.46 ; Additional information after first launch ; some unused variables were removed ; small change in ffmpeg unpacking method
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER THE CORRECT VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
