@@ -6,7 +6,11 @@ ConvertFrom-StringData @'
 	criticalupdateerror2 = Contact e-mail address: pobierak4win@proton.me or leave comment at https://www.youtube.com/watch?v=IuWXUPNXOY0
 	ffmpglib = ! THE FFMPEG LIBRARY IS NOT DOWNLOADED !.
 	ytdlpexe = ! YOUTUBE-DLP IS NOT DOWNLOADED !.
-	updpath = FOR THE CORRECT FUNCTIONING OF POBIERAK, USE OPTION NO.8 AND FROM THE UPDATE MENU OPTIONS NO.2 OR NO.4
+	updpath = FOR THE CORRECT FUNCTIONING OF POBIERAK, USE OPTION NO.8 AND FROM THE UPDATE MENU OPTIONS NO.2 & NO.3 OR NO.4
+	optionwithoutexe0 = IT LOOKS LIKE Pobierak STILL NEED THE NECESARRY *.exe files TO WORK. 
+	optionwithoutexe1 = YOU WILL BE REDIRECTED TO THE UPDATE MENU WHERE YOU SHOULD USE OPTION no. 4
+	optionwithoutexe2 = USE OPTION NR. 4 TO DOWNLOAD THE NECESSARY exe FILES.
+	optionwithoutexe3 = yt-dlp.exe AND ffmpeg.exe ARE REQUIRED FOR PROPER FUNCTIONING OF THE Pobierak
 '@
 
 #freespace
@@ -137,7 +141,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = 3.454 fix for exit after update ; fixed variable name in option 7 qualit -> quality ; option no. 5 in the menu - video downloading works again ; Improved cookie extraction from edge and chrome ; fixed errors in the information area ;
+	news00 = 3.46 -Additional information after first launch -some unused variables were removed -small change in ffmpeg unpacking method
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER THE CORRECT VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
