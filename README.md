@@ -15,3 +15,6 @@ Link do YT z krótką prezentacją jednej z opcji pobieraka:
 
 https://www.youtube.com/watch?v=IuWXUPNXOY0
 
+If you think I deserve a ☕️, you can send a few 🪙 to  Bitcoin address:
+
+1HAK5X4JjnBsJyAaQnpwMMkJRi1MeV7hp3
