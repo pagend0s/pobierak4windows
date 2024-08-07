@@ -6,7 +6,12 @@ ConvertFrom-StringData @'
 	criticalupdateerror2 = Kontaktowy adres e-mail: pobierak4win@proton.me lub zostaw komentarz na https://www.youtube.com/watch?v=IuWXUPNXOY0
 	ffmpglib = ! BIBLIOTEKA FFMPEG NIE JEST SCIAGNIETA !
 	ytdlpexe = ! YOUTUBE-DLP NIE JEST POBRANY !.
-	updpath = W CELU POPRAWNEGO DZIALANIA POBIERAKA UZYJ OPCJI NR 8 I Z MENU AKTUALIZACJI OPCJE NR 2 LUB 4.
+	updpath = W CELU POPRAWNEGO DZIALANIA POBIERAKA UZYJ OPCJI NR 8 I Z MENU AKTUALIZACJI OPCJE NR 2 I NR 3 LUB 4.
+	optionwithoutexe0 = WYGLADA NA TO, ZE Pobierak WCIAZ POTRZEBUJE NIEZBEDNYCH PLIKOW *.exe, BY DZIALAC. 
+	optionwithoutexe1 = ZOSTANIESZ PRZENIESIONY DO MENU AKTUALIZACJI, GDZIE NALEZY WYBRAC OPCJE NR 4
+	optionwithoutexe2 = ABY POBRAC NIEZBEDNE PLIKI exe, WYBIERZ OPCJE NR 4.
+	optionwithoutexe3 = yt-dlp.exe ORAZ ffmpeg.exe SA WYMAGANE DO PRAWIDLOWEGO FUKCJONOWANIA POBIERAKA
+	
 '@
 
 #freespace
@@ -140,7 +145,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.453 poprawa exit po aktualizacji ; poprawiona nazwa zmiennej qualit w opcji 7 -> quality ; opcja nr 5 w menu - sciaganie video znow dziala ; Poprawiona extrakcja plikow cookie z edge i chrome ; poprawione bledy w obszarze informacji
+	news00 = 3.46  ; Dodatkowe informacje po pierwszym uruchomieniu ; usunieto niektore nieuzywane zmienne ; niewielka zmiana w metodzie rozpakowywania ffmpeg
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
