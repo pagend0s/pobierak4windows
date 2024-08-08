@@ -1,4 +1,4 @@
-$pobierak_v = "3.46"
+$pobierak_v = "3.461"
 
 #GET SYS LANG
 function get_lang(){
@@ -63,7 +63,7 @@ function play_sound(){
 
 #FUNCTION TO DISPLAY MAIN INFORMATION IN FIRST MENU
 Function internal_info() {
-	param [int]($missing_exe)
+	param( [int]$missing_exe )
 	#YTDLP EXE EXIST ?
 	if (Test-Path $yt_dlp) 
 		{
