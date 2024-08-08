@@ -1,4 +1,4 @@
-$pobierak_v = "3.461"
+$pobierak_v = "3.462"
 
 #GET SYS LANG
 function get_lang(){
@@ -947,13 +947,14 @@ Function updates_menu(){
 				write-host $text_msg.checkpobierakversion10`n -ForegroundColor green
 				if (( $language -eq "pl-PL" ) -or ( $language -eq "Polski"))
 					{
-						$whats_new = (Get-Content "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\pl-PL\pobierak.psd1"  | Select-String "news00" | Out-String)
+						$text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "pl-PL" ;
 					}
 				else
 					{
-						$whats_new = (Get-Content "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\en-US\pobierak.psd1"  | Select-String "news00" | Out-String)
+						$text_msg_upd   = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US" ;
 					}
-				$whats_new.split(";").trim() -ne ""			
+				
+				$text_msg_upd.news00 -Split ";" | write-host  -ForegroundColor green	
 				do
 					{
 						Write-Host ""
