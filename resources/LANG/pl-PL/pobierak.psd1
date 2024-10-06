@@ -145,7 +145,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.46  ; Dodatkowe informacje po pierwszym uruchomieniu ; usunieto niektore nieuzywane zmienne ; niewielka zmiana w metodzie rozpakowywania ffmpeg
+	news00 = 3.47  ; zaktualizowano zakodowany na stałe adres URL konwertera do wersji FFMPEG 7.1
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
