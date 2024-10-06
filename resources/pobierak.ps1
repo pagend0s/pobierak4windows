@@ -1,4 +1,4 @@
-$pobierak_v = "3.462"
+$pobierak_v = "3.47"
 
 #GET SYS LANG
 function get_lang(){
@@ -1050,7 +1050,7 @@ Function updates_menu(){
 		
 		#DONWLOAD NEW FFMPEG REPO FROM GITHUB GyanD TO ffmpeg.zip
 		
-        Start-BitsTransfer -Source "https://github.com/GyanD/codexffmpeg/releases/download/7.0/ffmpeg-7.0-essentials_build.zip" -Destination "$recources_main_dir\ffmpeg.zip"
+        Start-BitsTransfer -Source "https://github.com/GyanD/codexffmpeg/releases/download/7.1/ffmpeg-7.1-essentials_build.zip" -Destination "$recources_main_dir\ffmpeg.zip"
 		
 		SLEEP 1
 		Write-Host ""
