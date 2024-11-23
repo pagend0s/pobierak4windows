@@ -1,4 +1,4 @@
-$pobierak_v = "3.47"
+$pobierak_v = "3.48"
 
 #GET SYS LANG
 function get_lang(){
@@ -301,6 +301,32 @@ function video_format(){
 	return [string]$viedo_format
 }
 
+function playlist_range($playlist_range_yes_no, $playlist_range_1, $playlist_range_2){
+	$playlist_range_yes_no = $null
+	$playlist_range_array = @()
+	do
+		{
+			SLEEP 1
+			write-host ""
+			[int]$playlist_range_yes_no = ($(write-host $text_msg.playlist_range0 -ForegroundColor Yellow ; Read-Host ))
+		}while(($playlist_range_yes_no -ne 1  ) -and ($playlist_range_yes_no -ne 2))
+		$playlist_range_array += , $playlist_range_yes_no
+	
+	if ( $playlist_range_yes_no -eq 1)
+		{
+			do
+				{
+					SLEEP 1
+					write-host ""
+					$playlist_range_1 = ($(Write-Host $text_msg.playlist_range1 -ForegroundColor yellow ; Read-Host))
+					$playlist_range_2 = ($(Write-Host $text_msg.playlist_range2 -ForegroundColor yellow ; Read-Host))
+				}until (($playlist_range_1 -match '^[0-9]*$') -and ($playlist_range_2 -match '^[0-9]*$'))
+			$playlist_range_array += , $playlist_range_1
+			$playlist_range_array += , $playlist_range_2
+		}
+			return ,$playlist_range_array
+}
+
 function ytdlp_download_audio(){
 	if ( $song_count -eq $null )
 		{
@@ -482,6 +508,10 @@ Function download_playlist(){
 			write-host ""
 			SLEEP 1		
 		}	
+		
+	$range_array = playlist_range
+	$playlist_range_yes_no = $($range_array[0]) 
+	
 	[string]$playlist_ID_yt = ($(write-host $text_msg.downloadplaylistinfo0`n,$text_msg.downloadplaylistinfo1 -ForegroundColor yellow )) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green) + ($(Write-Host $text_msg.downloadplaylistinfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
 		
     #GET AUDIO QUALITY
@@ -496,8 +526,16 @@ Function download_playlist(){
 	#SHOW OWER WINDWOS EXPLORER THE TARGET DIR
     Start explorer.exe $output_directory
 	#MAIN DOWNLOAD PROCESS
-    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$playlist_ID_yt"
-
+	if ($playlist_range_yes_no -eq 1)
+		{
+			$from = $($range_array[1]) 
+			$to = $($range_array[2])
+			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$playlist_ID_yt"
+		}
+	else
+		{
+			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$playlist_ID_yt"
+		}
 	write-host ""
 	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
 }
@@ -608,7 +646,6 @@ Function download_movie_and_or_music_from_list(){
 		}
 	#SET PATH FOR LINK LIST
 	$source = Get-Content -Path "$recources_main_dir\songs_out.txt" | Where { $_ }
-	
 	
 	$viedo_format = video_format
 	$audio_yes_no = audio_0_1
@@ -787,41 +824,14 @@ cls
 		{
 			Remove-Item -Path $path2song_list_single
 		}
+#	(write-host $text_msg.downloadfromcookiewarn0`n -ForegroundColor yellow) + (write-host $text_msg.downloadfromcookiewarn1`n,$text_msg.downloadfromcookiewarn2`n -ForegroundColor RED) + (write-host $text_msg.downloadfromcookiewarn3`n -ForegroundColor yellow) + (write-host $text_msg.downloadfromcookiewarn4`n -ForegroundColor red) 
+	write-host ""
+	write-host $text_msg.downloadfromcookiewarn3`n -ForegroundColor yellow
+	SLEEP 2
 	
-	do
-		{
-			SLEEP 1
-			(write-host $text_msg.downloadfromcookiewarn0`n -ForegroundColor yellow) + (write-host $text_msg.downloadfromcookiewarn1`n,$text_msg.downloadfromcookiewarn2`n -ForegroundColor RED) + (write-host $text_msg.downloadfromcookiewarn3`n -ForegroundColor yellow) + (write-host $text_msg.downloadfromcookiewarn4`n -ForegroundColor red) 
-			Start-Sleep -Milliseconds 1000
-			[string]$web_browser = ($(Write-Host $text_msg.downloadfromcookieinfo -ForegroundColor yellow -NoNewLine ; Read-Host))
-			
-		}while(($web_browser -ne 'chrome')  -and ($web_browser -ne 'firefox') -and  ($web_browser -ne 'edge'))
-		
-
-	SLEEP 1
-    Write-Host ""
-	if ( $web_browser -eq "firefox" )
-		{
-			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Roaming\Mozilla\Firefox\Profiles"
-			$latest_profile = Get-ChildItem -Path $dir_4_borowser_cookies | Sort-Object LastAccessTime -Descending | Select-Object -First 1
-		}
-	elseif ( $web_browser -eq "edge" )
-		{
-		
-			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Microsoft\Edge\User Data\Default"
-			$latest_profile = $dir_4_borowser_cookies
-			Stop-Process -Name "msedge" -ErrorAction SilentlyContinue
-			Start-Process -FilePath ("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") -ArgumentList "--disable-features=LockProfileCookieDatabase"
-		
-		}
-	if ( $web_browser -eq "chrome" )
-		{
-			$dir_4_borowser_cookies = "C:\Users\$logged_usr\AppData\Local\Google\Chrome\User Data\Default"
-			$latest_profile = $dir_4_borowser_cookies	
-			Stop-Process -Name "chrome" -ErrorAction SilentlyContinue
-			Start-Process -FilePath ("C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe") -ArgumentList "--disable-features=LockProfileCookieDatabase"
-		}
-		
+	$range_array = playlist_range
+	$playlist_range_yes_no = $($range_array[0])
+	
 	[string]$playlist_ID_yt = ($(write-host $text_msg.downloadplaylistinfo0`n,$text_msg.downloadplaylistinfo1 -ForegroundColor yellow )) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green) + ($(Write-Host $text_msg.downloadplaylistinfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
 
 	If (Test-Path $path2song_list_single)
@@ -866,12 +876,30 @@ cls
 					write-host " "
 					(write-host $text_msg.downloadfromcookieaudio0`n,$text_msg.downloadfromcookieaudio1 -ForegroundColor yellow)
 					write-host " "
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
+						if ($playlist_range_yes_no -eq 1)
+							{
+								$from = $($range_array[1]) 
+								$to = $($range_array[2])
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+							}
+						else
+							{
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+							}
 					write-host " "
 					(write-host $text_msg.downloadfromcookieaudio2 -ForegroundColor yellow)
 					(write-host $text_msg.downloadfromcookievideo0`n -ForegroundColor yellow)
 					write-host " "
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
+						if ($playlist_range_yes_no -eq 1)
+							{
+								$from = $($range_array[1]) 
+								$to = $($range_array[2])
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+							}
+						else
+							{
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+							}
 					write-host " "
 					(write-host $text_msg.downloadfromcookievideo1`n -ForegroundColor yellow)
 						
@@ -881,18 +909,36 @@ cls
 					write-host " "
 					(write-host $text_msg.downloadfromcookievideo0`n -ForegroundColor yellow)
 					write-host " "
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s $a --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
+					if ($playlist_range_yes_no -eq 1)
+						{
+								$from = $($range_array[1]) 
+								$to = $($range_array[2])
+								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+						}
+					else
+						{
+							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+						}
 					write-host " "
 					(write-host $text_msg.downloadfromcookievideo1`n -ForegroundColor yellow)
 				}
 		}	
 	
 	if ( $video_yes_no -eq 2)
-		{		
+		{	
 			write-host " "
 			(write-host $text_msg.downloadfromcookieaudio1 -ForegroundColor yellow)
 			write-host " "
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser ""$web_browser"":""$latest_profile"" " , "$playlist_ID_yt"
+			if ($playlist_range_yes_no -eq 1)
+				{
+					$from = $($range_array[1]) 
+					$to = $($range_array[2])
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+				}
+			else
+				{
+					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
+				}
 			write-host " "
 			(write-host $text_msg.downloadfromcookieaudio2 -ForegroundColor yellow)
 								
