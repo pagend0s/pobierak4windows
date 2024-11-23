@@ -84,6 +84,14 @@ ConvertFrom-StringData @'
 	videoformat1 = PRAWIDLOWE TO: avi ; mp4: 
 '@
 
+#playlist_range
+ConvertFrom-StringData @'
+	playlist_range0 = CZY CHCESZ SCIAGNAC Z JAKIEGOS KONKRETNEGO ZAKRESU ?: 1 = TAK .. 2 = NIE
+	playlist_range1 = PODAJ WARTOSC LICZBOWA "OD":
+	playlist_range2 = PODAJ WARTOSC LICZBOWA DO: 
+'@
+
+
 #downloadsongonebyone
 ConvertFrom-StringData @'
 	downloadsongintro = WYBRALES OPCJE NUMER 1. POBIERANIE AUDIO Z YT ZA POMOCA POJEDYNCZYCH LINKOW SKOPIOWANYCH DO TERMINALA.
@@ -131,9 +139,9 @@ ConvertFrom-StringData @'
 	downloadfromcookiewarn0 = PODAJ JAKA PRZEGLADARKE UZYWASZ, CHODZI O TA GDZIE AKTUALNIE ZNAJDUJE SIE PLAYLISTA Z ZALOGOWANEGO KONTA YOUTUBE.
 	downloadfromcookiewarn1 = ! PRZY WYBORZE PRZEGLADARKI ZALECA SIE ROZWAGE. POBIERAK (YOUTUBE-DLP) BEDZIE MIAL DOSTEP DO CALEGO PROFILU !
 	downloadfromcookiewarn2 = ! ZALECAM ZALOGOWANIE SIE DO YOUTUBE NA PRZEGLADARCE KTOREJ NIE UZYWA SIE NA CODZIEN I WSKAZANIE WLASNIE JEJ !
-	downloadfromcookiewarn3 = OBSLUGIWANE PRZEGLADARKI TO: chrome ; edge ; firefox.
+	downloadfromcookiewarn3 = OBSLUGIWANA PRZEGLADARKI TO: firefox.
 	downloadfromcookiewarn4 = !!! WAZNE !!! Po wybraniu przegladarki, w przypadku Chrome i Edge, wszystkie otwarte wczesniej instancje Chrome lub Edge zostana zamkniete, aby ponownie otworzyć Chrome lub Edge w trybie odblokowanych plikow cookie.!!!
-	downloadfromcookieinfo = WPISZ POPRAWNA WARTOSC: chrome LUB edge LUB firefox :
+	downloadfromcookieinfo = WPISZ POPRAWNA WARTOSC: firefox LUB brave :
 	downloadfromcookieaudio0 = NAJPIERW ZOSTANIE SCIAGNIETE AUDIO.
 	downloadfromcookieaudio1 = SCIAGANIE AUDIO W TOKU..
 	downloadfromcookieaudio2 = SCIAGANIE AUDIO ZAKONCZONE !
@@ -145,7 +153,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.46  ; Dodatkowe informacje po pierwszym uruchomieniu ; usunieto niektore nieuzywane zmienne ; niewielka zmiana w metodzie rozpakowywania ffmpeg
+	news00 = 3.48  ; DODANA MOZLIWOSC USTALENIA ZAKRESU OD DO W OPCJI 3 ORAZ 7 ; USUNIETA MOZLIWOSC EXTRAKCJI COOKIES W OPCJI 7.. OBECNIE TYLKO FIREFOX
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
