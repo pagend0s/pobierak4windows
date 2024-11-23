@@ -59,6 +59,13 @@ ConvertFrom-StringData @'
 	videoformat1 = SUPPORTED ARE: avi ; mp4: 
 '@
 
+#playlist_range
+ConvertFrom-StringData @'
+	playlist_range0 = DO YOU WANT TO DOWNLOAD FROM A SPECIFIC RANGE ?: PRESS 1 = YES .. 2 = NO
+	playlist_range1 = ENTER NUMERICAL VALUE "FROM":
+	playlist_range2 = ENTER NUMERICAL VALUE "TO": 
+'@
+
 #audio_0_1
 ConvertFrom-StringData @'
 	audio010 = DO YOU WANT TO DOWNLOAD THE AUDIO TRACK SEPARATED AS MP3 ALSO WITH VIDEO ?: PRESS 1 = YES .. 2 = NO
@@ -126,9 +133,9 @@ ConvertFrom-StringData @'
 	downloadfromcookiewarn0 = ENTER WHAT BROWSER YOU ARE USING, IT IS WHERE THE PLAYLIST FROM THE LOGGED IN YOUTUBE ACCOUNT IS CURRENTLY.
 	downloadfromcookiewarn1 = ! BE CAREFUL WHEN CHOOSING YOUR BROWSER. POBIERAK (YOUTUBE-DLP) WILL HAVE ACCESS TO THE ENTIRE PROFILE !
 	downloadfromcookiewarn2 = ! I RECOMMEND LOG IN TO YOUTUBE ON A BROWSER WHICH YOU DO NOT USE ON EVERYDAY !
-	downloadfromcookiewarn3 = SUPPORTED BROWSERS: chrome ; edge ; firefox.
+	downloadfromcookiewarn3 = SUPPORTED BROWSER: firefox.
 	downloadfromcookiewarn4 = !!! IMPORTANT !!! After selecting the browser, in the case of Chrome and Edge, all previously open Chrome or Edge instances will be closed in order to reopen Chrome or Edge in the unlocked cookie mode.
-	downloadfromcookieinfo = ENTER THE CORRECT VALUE: chrome OR edge OR firefox :
+	downloadfromcookieinfo = ENTER THE CORRECT VALUE: firefox OR brave :
 	downloadfromcookieaudio0 = AUDIO WILL BE DOWNLOADED FIRST.
 	downloadfromcookieaudio1 = DOWNLOADING AUDIO IN PROGRESS..
 	downloadfromcookieaudio2 = AUDIO DOWNLOAD COMPLETED!
@@ -141,7 +148,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = 3.47 ; updated hardcoded url to FFMPEG version 7.1
+	news00 = 3.48 ; ADDED ABILITY TO SET A RANGE FROM TO IN OPTIONS 3 AND 7 ; DELETED ABILITY TO EXTRACT COOKIES IN OPTION 7. CURRENTLY ONLY FIREFOX
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER THE CORRECT VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
