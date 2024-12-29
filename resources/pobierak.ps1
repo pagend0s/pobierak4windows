@@ -1,4 +1,4 @@
-$pobierak_v = "3.48"
+$pobierak_v = "3.481"
 
 #GET SYS LANG
 function get_lang(){
@@ -139,23 +139,27 @@ function Get-FreeSpace {
 #FUNCTION TO POINT THE DESTINATION DIR FOR DOWNLOADED MULTIMEDIA WITH WINDOWS FILE EXPLORER GUI
 Function Select-Folder
 {
-	param([string]$Description="Select Folder",[string]$RootFolder="Desktop")
-
-	[System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null 
+	param([string]$Description="Select Folder",[string]$RootFolder="UserProfile")
 	
-	$objForm = New-Object System.Windows.Forms.FolderBrowserDialog
-	$Description = $text_msg.selectdir ;
-	$objForm.Rootfolder = $RootFolder ;
-	$objForm.Description = $Description ;
-	$Show = $objForm.ShowDialog() ;
-		If ($Show -eq "OK")
-			{
-				Return $objForm.SelectedPath
-			}
-		Else
-			{
-				Write-Error "Operation cancelled by user."
-			}	
+	do
+		{
+			[System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null 
+	
+			$objForm = New-Object System.Windows.Forms.FolderBrowserDialog
+			$Description = $text_msg.selectdir ;
+			$objForm.Rootfolder = $RootFolder ;
+			$objForm.Description = $Description ;
+			$Show = $objForm.ShowDialog() ;
+			If ($Show -eq "OK")
+				{
+					Return $objForm.SelectedPath
+				}		
+			Else
+				{
+					Write-host "PLEASE SET DIR !!!" -ForegroundColor Red
+					$dir = 0;
+				}
+	}while($dir -eq 0)
 }
 #FUNCTION TO SELECT FILE WITH LINKS TO DOWNLOAD WITH WINDOWS FILE EXPLORER GUI
  function Select-File {
