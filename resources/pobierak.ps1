@@ -1,4 +1,4 @@
-$pobierak_v = "3.481"
+$pobierak_v = "3.482"
 
 #GET SYS LANG
 function get_lang(){
@@ -65,11 +65,6 @@ function play_sound(){
 Function internal_info() {
 	param( [int]$missing_exe )
 	#YTDLP EXE EXIST ?
-	if (Test-Path $yt_dlp) 
-		{
-			$yt_dlp_ver_1 = $(write-host $text_msg.internalinfo0 " " -NoNewLine -ForegroundColor yellow ) + $( Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--version" ) ;
-
-		}
 	#VARIABLES FOR TEST IF NECESSARY EXE EXISTS
 	$test_resource_ffmpeg_if_exist = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe" ;
 	$test_resource_yt_dlp_if_exist = "$recources_main_dir\yt-dlp.exe" ;
