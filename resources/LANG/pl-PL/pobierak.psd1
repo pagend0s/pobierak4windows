@@ -153,7 +153,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.482  ; Usunięto problem ze sprawdzania wersji ytdlp
+	news00 = 3.483  ; Dostosowanie wyboru folderow do win 11 ; Usunięto problem ze sprawdzania wersji ytdlp
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPROWADZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
