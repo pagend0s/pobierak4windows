@@ -1,4 +1,4 @@
-$pobierak_v = "3.482"
+$pobierak_v = "3.483"
 
 #GET SYS LANG
 function get_lang(){
@@ -134,7 +134,7 @@ function Get-FreeSpace {
 #FUNCTION TO POINT THE DESTINATION DIR FOR DOWNLOADED MULTIMEDIA WITH WINDOWS FILE EXPLORER GUI
 Function Select-Folder
 {
-	param([string]$Description="Select Folder",[string]$RootFolder="UserProfile")
+	param([string]$Description="Select Folder",[string]$RootFolder="MyComputer")
 	
 	do
 		{
