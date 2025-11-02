@@ -1,1316 +1,1440 @@
-$pobierak_v = "3.483"
+# =======================
+# POBIERAK (PowerShell) – revised version with AI
+# Version:
+$pobierak_v = "3.490"
+# =======================
+# --- Runtime configuration & important paths ---
+# $recources_main_dir: absolute path to resources folder (script directory).
+# $yt_dlp: path to yt-dlp.exe (bundled).
+# $ffmpeg: default ffmpeg.exe path (validated later by Resolve-FFmpegPath).
+# =======================
 
-#GET SYS LANG
-function get_lang(){
-	$regkey = "HKCU:\Control Panel\Desktop" ;
-	$name = "PreferredUILanguages" ;
-	$get_lang = (Get-ItemProperty $regkey).PSObject.Properties.Name -contains $name ;
-	if ( $get_lang -eq $false )
-		{
-			$lang = (Get-WinUserLanguageList).LocalizedName ;
-		}
-	else
-		{
-			$lang = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' PreferredUILanguages).PreferredUILanguages[0] ;
-		}
-	return $lang ;
+#Preferences/settings
+#Browser for cookies-from-browser (Windows): 'firefox' | 'chrome' | 'edge'
+$BrowserForCookies = 'firefox'
+
+$UnderlineChar = '-'
+
+# ------------------------------------------------------------------------------
+# Load required assemblies (System.Windows.Forms) (Forms)
+try {
+    Add-Type -AssemblyName System.Windows.Forms
+} catch {
+    Write-Host "Nie można załadować System.Windows.Forms" -ForegroundColor Red
 }
 
-[string]$language = get_lang ;
-
-#VAR OF CURRENTLY LOGGED USER
-$logged_usr = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1] ;
-
-#CLEAR MAIN VAR
-$recources_main_dir = $null ;
-$pobierakbat_main_dir = $null ;
-$yt_dlp = $null ;
-$ffmpeg = $null ;
-$process_bak_primary_id = $null ;
-$process_bak_id = $null ;
-$UnderlineChar = '-' ;
-#GET POBIERAK PROCESS PID IF ACTIV FOR EVENTUALLY ERROR DETECTION
-$process_bak_primary_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_primary.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''} ;
-$process_bak_id = Get-CimInstance Win32_Process | where commandline -match 'pobierak_bak.ps1'  | Select ProcessId | ForEach-Object {$_ -replace '\D',''} ;
-
-#SET MAIN DIR 
-$recources_main_dir =  Split-Path $PSCommandPath -Parent ;
-#SET RECOURCES DIR
-$pobierakbat_main_dir =  $recources_main_dir -replace 'Resources','' ;
-#SET YT-DLP LOCATION
-$yt_dlp = "$recources_main_dir\yt-dlp.exe" ;
-#SET ffmpeg LOCATION
-$ffmpeg = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe" ;
-
-#SYS LANG IF PL THEN PL IF OTHER THEN EN
-
-if (( $language -eq "pl-PL" ) -or ( $language -eq "Polski"))
-    {
-		$text_msg = Import-LocalizedData -BaseDirectory "$recources_main_dir\LANG\" -UICulture "pl-PL" ;
+# ------------------------------------------------------------------------------
+# --- Function: Get-Lang ---
+# Purpose: Detect the current UI language using HKCU\Control Panel\Desktop\PreferredUILanguages,
+#          falling back to Get-WinUserLanguageList or Get-Culture. Returns a language tag (e.g., en-US).
+# Returns: [string] language tag.
+function Get-Lang {
+    try {
+        $regkey = "HKCU:\Control Panel\Desktop"
+        $name   = "PreferredUILanguages"
+        $has    = (Get-ItemProperty $regkey).PSObject.Properties.Name -contains $name
+        if (-not $has) {
+            $lang = (Get-WinUserLanguageList)[0].LanguageTag
+        } else {
+            $lang = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' PreferredUILanguages).PreferredUILanguages[0]
+        }
+        if (-not $lang) { $lang = (Get-Culture).Name }
+        return [string]$lang
+    } catch {
+        return "en-US"
     }
-else
-    {
-		$text_msg  = Import-LocalizedData -BaseDirectory "$recources_main_dir\LANG\" -UICulture "en-US" ;
+}
+[string]$language = Get-Lang
+
+# ------------------------------------------------------------------------------
+# User context, paths, tools
+$logged_usr           = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
+$recources_main_dir   = Split-Path $PSCommandPath -Parent
+$pobierakbat_main_dir = $recources_main_dir -replace 'Resources',''
+$yt_dlp               = "$recources_main_dir\yt-dlp.exe"
+$ffmpeg               = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe"   # domyślnie – później weryfikujemy
+
+# ------------------------------------------------------------------------------
+# Localization (messages)
+if (($language -eq "pl-PL") -or ($language -eq "Polski")) {
+    $text_msg = Import-LocalizedData -BaseDirectory "$recources_main_dir\LANG\" -UICulture "pl-PL"
+} else {
+    $text_msg = Import-LocalizedData -BaseDirectory "$recources_main_dir\LANG\" -UICulture "en-US"
+}
+
+# ------------------------------------------------------------------------------
+# Sound
+function play_sound {
+    try {
+        $PlayWav = New-Object System.Media.SoundPlayer
+        $PlayWav.SoundLocation = "$recources_main_dir\Bottle.wav"
+        $PlayWav.PlaySync()
+    } catch {}
+}
+
+# ------------------------------------------------------------------------------
+# Locate ffmpeg.exe
+function Resolve-FFmpegPath {
+    param([string]$Root = "$recources_main_dir\ffmpeg")
+    if (Test-Path $ffmpeg) { return $ffmpeg }
+    $exe = Get-ChildItem -Path $Root -Recurse -File -Filter ffmpeg.exe -ErrorAction SilentlyContinue |
+           Select-Object -First 1 -ExpandProperty FullName
+    if ($exe) { return $exe }
+    return $null
+}
+
+# ------------------------------------------------------------------------------
+# PIDs of helper processes (bez regex-Replace na ToString())
+$process_bak_primary_id = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%pobierak_primary.ps1%'" -ErrorAction SilentlyContinue |
+                          Select-Object -ExpandProperty ProcessId -ErrorAction SilentlyContinue
+$process_bak_id         = Get-CimInstance Win32_Process -Filter "CommandLine LIKE '%pobierak_bak.ps1%'" -ErrorAction SilentlyContinue |
+                          Select-Object -ExpandProperty ProcessId -ErrorAction SilentlyContinue
+# ------------------------------------------------------------------------------
+# --- Function: internal_info ---
+# Purpose: Print diagnostic information about missing executables and running backup processes.
+# Params: [int] missing_exe - ignored input; updates $global:missing_exe (0..2).
+# Side effects: Writes warnings to host; sets $global:missing_exe.
+function internal_info([int]$missing_exe) {
+    $test_ff = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe"
+    $test_yt = "$recources_main_dir\yt-dlp.exe"
+
+    if (($process_bak_id -ne $null) -or ($process_bak_primary_id -ne $null)) {
+        $ULine = $UnderlineChar * ($text_msg.criticalupdateerror1.Length + $text_msg.criticalupdateerror2.Length)
+        Write-Host $ULine -ForegroundColor Red
+        Write-Host $text_msg.criticalupdateerror1
+        Write-Host $text_msg.criticalupdateerror2 -ForegroundColor Red
+        Write-Host $ULine -ForegroundColor Red
     }
 
-function play_sound(){
-	
-	$PlayWav=New-Object System.Media.SoundPlayer ;
-	$PlayWav.SoundLocation="$recources_main_dir\Bottle.wav" ;
-	$PlayWav.playsync()
-	
+    $missing_ffmpg = 0
+    if (Test-Path $test_ff) {
+        $missing_ffmpg = 0
+    } else {
+        $ULine = $UnderlineChar * $text_msg.updpath.Length
+        Write-Host $ULine -ForegroundColor Red
+        Write-Host $text_msg.warning -ForegroundColor Red
+        Write-Host $text_msg.ffmpglib
+        Write-Host $text_msg.updpath -ForegroundColor Red
+        Write-Host $ULine -ForegroundColor Red
+        $missing_ffmpg = 1
+    }
+
+    $missing_ytdlp = 0
+    if (Test-Path $test_yt) {
+        $missing_ytdlp = 0
+    } else {
+        $ULine = $UnderlineChar * $text_msg.updpath.Length
+        Write-Host $ULine -ForegroundColor Red
+        Write-Host $text_msg.warning -ForegroundColor Red
+        Write-Host $text_msg.ytdlpexe
+        Write-Host $text_msg.updpath -ForegroundColor Red
+        Write-Host $ULine -ForegroundColor Red
+        $missing_ytdlp = 1
+    }
+
+    $global:missing_exe = $missing_ytdlp + $missing_ffmpg
 }
 
-#FUNCTION TO DISPLAY MAIN INFORMATION IN FIRST MENU
-Function internal_info() {
-	param( [int]$missing_exe )
-	#YTDLP EXE EXIST ?
-	#VARIABLES FOR TEST IF NECESSARY EXE EXISTS
-	$test_resource_ffmpeg_if_exist = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe" ;
-	$test_resource_yt_dlp_if_exist = "$recources_main_dir\yt-dlp.exe" ;
-	#IF TEST VER ARE EMPTY THEN IS NO ERROR ELSE THERE IS A PROBLEM WITH MAIN SCRIPT
-	if (( $process_bak_id -eq $null ) -and ( $process_bak_primary_id -eq $null ))
-		{
-			$critical_update_error = " " ;
-		}
-	else
-		{
-			$ULine = $UnderlineChar * ($text_msg.criticalupdateerror1.Length + $text_msg.criticalupdateerror2.Length)
-			Write-Host -Object $ULine -ForegroundColor Red		
-			$critical_update_error = ($(write-host $text_msg.criticalupdateerror1`n,$text_msg.criticalupdateerror2  -ForegroundColor Red )) ;
-			Write-Host -Object $ULine -ForegroundColor Red
-		}
-	#TEST IF FFMPEG IS ALREADY DOWNLOADED
-	if (Test-Path $test_resource_ffmpeg_if_exist) 
-		{
-			$missing_ffmpg	= 0;
-		}
-	else
-		{
-			$ULine = $UnderlineChar * $text_msg.updpath.Length
-			Write-Host -Object $ULine -ForegroundColor Red
-			$warning_missing_resource = ($( Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), $text_msg.warning ) -ForegroundColor RED )) ;
-			$resource_ffmpeg = ($(write-host $text_msg.ffmpglib`n,$text_msg.updpath -ForegroundColor Red )) ;
-			Write-Host -Object $ULine -ForegroundColor Red
-			$missing_ffmpg	= 1;
-		}
-	#TEST IF YTDLP IS ALREADY DOWNLOADED
-	if (Test-Path $test_resource_yt_dlp_if_exist) 
-		{
-			$missing_ytdlp = 0;			
-		}
-	else
-		{
-			$ULine = $UnderlineChar * $text_msg.updpath.Length
-			Write-Host -Object $ULine -ForegroundColor Red
-			$warning_missing_resource = ($( Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), $text_msg.warning ) -ForegroundColor RED )) ;
-			$resource_yt_dlp = ($(write-host $text_msg.ytdlpexe`n,$text_msg.updpath -ForegroundColor Red )) ;
-			Write-Host -Object $ULine -ForegroundColor Red
-			$missing_ytdlp = 1;
-		}
-	#RETURN INFO ABOUT DETECTED ERRORS OR NOT
-	$global:missing_exe = $missing_ytdlp + $missing_ffmpg;
+# ------------------------------------------------------------------------------
+# GUI: file selection warning
+function warning_select_file {
+    [System.Windows.Forms.MessageBox]::Show($text_msg.selectfile,'WARNING') | Out-Null
 }
-#GUI NOTIFICATION ABOUT THE NEED TO SELECT A FILE CONTAINING LINKS TO YT
-Function warning_select_file(){
-	#LOAD GUI WINDOW IN CONSTRUCT BLOCK
-	[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | out-null;
-	#PROMT MESSAGE
-	[System.Windows.Forms.MessageBox]::Show($text_msg.selectfile,'WARNING')
-}
-#FUNCTION TO CALCULATE AVAILABLE SPACE IN A TARGET DIR FOR DOWNLOADED MULTIMEDIA
+
+# ------------------------------------------------------------------------------
+# Free space – CIM
 function Get-FreeSpace {
-    Param(
-        $path = $output_directory #PATH TO CHOOSEN DIR
-    );
-    [double]$free = Get-WmiObject Win32_Volume -Filter "DriveType=3" |
-            Where-Object { $path -like "$($_.Name)*" } |
-            Sort-Object Name -Desc |
-            Select-Object -First 1 FreeSpace |
-            ForEach-Object { $_.FreeSpace / (1024*1024*1024) }
-	
-    return ([math]::round($free,2))
+    param([string]$path = $output_directory)
+    $vol = Get-CimInstance Win32_Volume -ErrorAction SilentlyContinue |
+           Where-Object { $path -and ($_ -and ($path -like "$($_.Name)*")) } |
+           Sort-Object Name -Descending |
+           Select-Object -First 1
+    if ($vol -and $vol.FreeSpace) { return [math]::Round(($vol.FreeSpace/1GB), 2) }
+    return 0
 }
-#FUNCTION TO POINT THE DESTINATION DIR FOR DOWNLOADED MULTIMEDIA WITH WINDOWS FILE EXPLORER GUI
-Function Select-Folder
-{
-	param([string]$Description="Select Folder",[string]$RootFolder="MyComputer")
-	
-	do
-		{
-			[System.Reflection.Assembly]::LoadWithPartialName("System.windows.forms") | Out-Null 
-	
-			$objForm = New-Object System.Windows.Forms.FolderBrowserDialog
-			$Description = $text_msg.selectdir ;
-			$objForm.Rootfolder = $RootFolder ;
-			$objForm.Description = $Description ;
-			$Show = $objForm.ShowDialog() ;
-			If ($Show -eq "OK")
-				{
-					Return $objForm.SelectedPath
-				}		
-			Else
-				{
-					Write-host "PLEASE SET DIR !!!" -ForegroundColor Red
-					$dir = 0;
-				}
-	}while($dir -eq 0)
+
+# ------------------------------------------------------------------------------
+# Folder selection
+
+function Select-Folder {
+    [CmdletBinding()]
+    param(
+        [string]$Description = "Select Folder",
+        # You can pass either a SpecialFolder name (e.g. 'MyComputer') or a path
+        [string]$RootFolder  = "MyComputer"
+    )
+
+    # Ensure STA (needed for WinForms)
+    if ([Threading.Thread]::CurrentThread.ApartmentState -ne 'STA') {
+        throw "Select-Folder must run in an STA thread. Start PowerShell with -STA or call from a script host that is STA."
+    }
+
+    Add-Type -AssemblyName System.Windows.Forms
+    Add-Type -AssemblyName System.Drawing
+
+    $owner = New-Object System.Windows.Forms.Form
+    $dialog = New-Object System.Windows.Forms.FolderBrowserDialog
+
+    try {
+        # --- Hidden, topmost owner ---
+        $owner.StartPosition  = 'CenterScreen'
+        $owner.Size           = New-Object System.Drawing.Size(1,1)
+        $owner.ShowInTaskbar  = $false
+        $owner.FormBorderStyle= 'FixedToolWindow'
+        $owner.TopMost        = $true
+        $owner.Opacity        = 0
+        $owner.Show()   # Create a handle so it can be a proper owner
+
+        # --- Configure dialog ---
+        $dialog.Description = $Description  # (use your $text_msg.selectdir if you prefer)
+        $dialog.ShowNewFolderButton = $true
+
+        # Root folder: allow either SpecialFolder or a file system path as a starting point
+        try {
+            $dialog.RootFolder = [System.Environment+SpecialFolder]::$RootFolder
+        }
+        catch {
+            if (Test-Path $RootFolder) {
+                # If RootFolder is a path, seed SelectedPath instead
+                $dialog.SelectedPath = (Resolve-Path $RootFolder).Path
+            }
+            else {
+                # Fallback to Desktop if unknown string
+                $dialog.RootFolder = [System.Environment+SpecialFolder]::Desktop
+            }
+        }
+
+        while ($true) {
+            $result = $dialog.ShowDialog($owner)
+            if ($result -eq [System.Windows.Forms.DialogResult]::OK -and
+                -not [string]::IsNullOrWhiteSpace($dialog.SelectedPath)) {
+                return $dialog.SelectedPath
+            }
+            else {
+                $res = [System.Windows.Forms.MessageBox]::Show(
+                    $owner,
+                    "Cancel directory selection?",
+                    "Pobierak",
+                    [System.Windows.Forms.MessageBoxButtons]::YesNo,
+                    [System.Windows.Forms.MessageBoxIcon]::Warning
+                )
+                if ($res -eq [System.Windows.Forms.DialogResult]::Yes) { return $null }
+            }
+        }
+    }
+    finally {
+        if ($dialog) { $dialog.Dispose() }
+        if ($owner -and -not $owner.IsDisposed) { $owner.Close(); $owner.Dispose() }
+    }
 }
-#FUNCTION TO SELECT FILE WITH LINKS TO DOWNLOAD WITH WINDOWS FILE EXPLORER GUI
- function Select-File {
+
+
+# ------------------------------------------------------------------------------
+# --- Function: Select-File ---
+# Purpose: Display an OpenFileDialog restricted to .txt by default and return the chosen file.
+# Params: [string] Directory - initial directory.
+# Returns: Selected file path or $null.
+function Select-File {
     param([string]$Directory = $PWD)
-
     $dialog = [System.Windows.Forms.OpenFileDialog]::new()
-
-    $dialog.InitialDirectory = (Resolve-Path $Directory).Path
-    $dialog.RestoreDirectory = $true
-
+    $dialog.InitialDirectory  = (Resolve-Path $Directory).Path
+    $dialog.RestoreDirectory  = $true
+    $dialog.Filter            = "Txt files (*.txt)|*.txt|All files (*.*)|*.*"
+    $dialog.CheckFileExists   = $true
+    $dialog.Title             = "Select a file with links"
     $result = $dialog.ShowDialog()
-
-    if($result -eq [System.Windows.Forms.DialogResult]::OK){
+    if ($result -eq [System.Windows.Forms.DialogResult]::OK) {
         return $dialog.FileName
-  }
+    }
+    return $null
 }
-#FILTER OUT ENTERED OR PARSED LINK AND SEARCH FOR PLAYLIST OR CHANNEL IN IT
-function filter_links(){	
-	#SEARCH PATTERN FOR PLAYLIST
-	$ignore_link = 0
-	#FILTER YT LINK TO FIND REFERENCESS PLAYLISTS
-	$yt_link_filter_plli = $testlink | Select-String -pattern "&list" ;
-	#FILTER YT LINK TO FIND REFERENCESS TO PLAYLISTS 2
-	$yt_link_filter_plli_1 = $testlink | Select-String -pattern "list=" ;
-	#FILTER YT LINK TO FIND REFERENCESS TO CHANNEL
-	$yt_link_filter_channel = $testlink | Select-String -pattern "channel" ;
-	#SEARCH PATTERN FOR &ab_channel
-	$yt_link_filter_ab_channel = $testlink | Select-String -pattern "&ab_channel" ;
-	#IF &ab_channel IS DETECTED AND NO PLAYLIST - CORRECT IT TO DOWNLOAD ONE TRACK LINK
-	if (( $yt_link_filter_ab_channel -ne $null ) -and ( $yt_link_filter_plli -eq $null ) )
-		{
-			$pattern = '(?<=\=).+?(?=\&)'
-			$singel_link_after_filter = [regex]::Matches($yt_link_filter_ab_channel, $pattern).Value | Select-Object -First 1
-			$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
-			write-host "--------------------------------------------------------------------------"
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.abchanneldiscovered0 -ForegroundColor Red
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			($(write-host $text_msg.abchanneldiscovered1 -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; ))
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.abandchanneldiscovered -ForegroundColor Magenta
-			write-host "--------------------------------------------------------------------------"
-			$correct_single_link >> "$recources_main_dir\songs_out.txt"
-			$ignore_link = 1 ;							
-		}
-	#IF channel IS DETECTED - IGNORE THE LINK
-	if (( $yt_link_filter_channel -ne $null ) -and ($yt_link_filter_ab_channel -eq $null ))
-		{
-			write-host "--------------------------------------------------------------------------------------------------------"
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.channeldiscovered0 -ForegroundColor Red
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.channeldiscovered1 -ForegroundColor Red
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.channeldiscovered2 -ForegroundColor Magenta
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.abandchanneldiscovered -ForegroundColor Magenta
-			write-host "--------------------------------------------------------------------------------------------------------"
-			$ignore_link = 1 ;
-		}
-	if ($yt_link_filter_plli -ne $null )
-		{
-			$pattern = '(?<=\=).+?(?=\&)'
-			$singel_link_after_filter = [regex]::Matches($yt_link_filter_plli, $pattern).Value | Select-Object -First 1
-			$correct_single_link = "https://www.youtube.com/watch?v=$singel_link_after_filter"
-			write-host "--------------------------------------------------------------------------"
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.plylistdicovered0 -ForegroundColor Red
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			($(write-host $text_msg.plylistdicovered1 -ForegroundColor Green -nonewline ) + $( write-host "$correct_single_link" -ForegroundColor YELLOW ; ))
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.plylistdicovered2 -ForegroundColor Magenta
-			write-host "--------------------------------------------------------------------------"
-			$correct_single_link >> "$recources_main_dir\songs_out.txt"
-			$ignore_link = 1 ;
-		}
-	if ($yt_link_filter_plli_1 -ne $null )
-		{
-			write-host "--------------------------------------------------------------------------"
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.plylistdicovered0 -ForegroundColor RED
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.plylistdicovered01 -ForegroundColor RED
-			write-host ""
-			Start-Sleep -Milliseconds 500
-			write-host $text_msg.plylistdicovered2 -ForegroundColor Magenta
-			write-host "--------------------------------------------------------------------------"
-			$ignore_link = 1
-		}
-	#IF NONE OF ABOVE ARE DETECTED = LINK IS OK - WRITE LINK TO FILE
-	if	(( $ignore_link -ne 1 ))
-		{
-			$testlink >>	"$recources_main_dir\songs_out.txt"
-		}
+
+# ------------------------------------------------------------------------------
+# --- Function: Normalize-YouTubeLink ---
+# Purpose: Normalize various YouTube URL forms to canonical watch?v=ID URLs; ignores channels/users.
+# Params: [string] Url - input URL.
+# Returns: Canonicalized URL or $null if not applicable.
+Add-Type -AssemblyName System.Web
+function Normalize-YouTubeLink {
+    param([Parameter(Mandatory)][string]$Url)
+
+    try { $u = [Uri]$Url } catch { return $null }
+    $qs = [System.Web.HttpUtility]::ParseQueryString($u.Query)
+
+    if ($u.AbsoluteUri -match '/channel/|/c/|/user/') { return $null }
+
+    if ($qs['list']) {
+        if ($qs['v']) { return "https://www.youtube.com/watch?v=$($qs['v'])" } else { return $null }
+    }
+
+    if ($qs['v']) { return "https://www.youtube.com/watch?v=$($qs['v'])" }
+
+    if ($u.Host -like 'youtu.be' -and $u.AbsolutePath.Trim('/')) {
+        return "https://www.youtube.com/watch?v=$($u.AbsolutePath.Trim('/'))"
+    }
+
+    return $Url
 }
-#FUNCTION TO GET AUDIO QUALITY
-function audio_quality(){
-	do
-		{	#GET INPUT WITH AUDIO QUALITY OUT VALUES - 128 kbps or 320 kbps
-			Write-Host ""
-			SLEEP 1
-			[string]$quality = ($(Write-Host $text_msg.quality0 -ForegroundColor green)) + ($(Write-Host $text_msg.quality1 -ForegroundColor yellow -NoNewLine ; Read-Host))
-		}while(($quality -ne "128K"  ) -and ($quality -ne "320K"))
+
+# ------------------------------------------------------------------------------
+# --- Function: filter_links ---
+# Purpose: Normalize a single URL and append it to resources\songs_out.txt if valid.
+function filter_links([string]$testlink) {
+    $out = "$recources_main_dir\songs_out.txt"
+    if (-not (Test-Path $out)) { New-Item -Path $out -ItemType File -Force | Out-Null }
+
+    $normalized = Normalize-YouTubeLink -Url $testlink
+    if ($null -ne $normalized) {
+        $normalized | Add-Content -Path $out
+    }
+}
+
+# ------------------------------------------------------------------------------
+# --- Function: audio_quality ---
+# Purpose: Prompt for MP3 bitrate (128k or 320k).
+# Returns: [string] "128K" or "320K".
+
+function audio_quality {
+    do {
+        Write-Host ""
+        Start-Sleep -Milliseconds 300
+        Write-Host $text_msg.quality0 -ForegroundColor Green
+        $q = Read-Host -Prompt $text_msg.quality1
+        $q = ($q.Trim()).ToUpper()
+    } while ($q -ne "128K" -and $q -ne "320K")
+    return [string]$q
+}
+# ------------------------------------------------------------------------------
+# --- Function: audio_0_1 ---
+# Purpose: Yes/No choice for audio download (1=yes, 2=no).
+# Returns: [int] 1 or 2.
+function audio_0_1 {
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.audio010 -ForegroundColor Yellow
+        $ans = Read-Host -Prompt $text_msg.audio011
+        [int]$ans = $ans
+    } while ($ans -ne 1 -and $ans -ne 2)
+    return [int]$ans
+}
+# ------------------------------------------------------------------------------
+# --- Function: video_0_1 ---
+# Purpose: Yes/No choice for video download (1=yes, 2=no).
+# Returns: [int] 1 or 2.
+function video_0_1 {
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.video010 -ForegroundColor Yellow
+        $ans = Read-Host -Prompt $text_msg.video011
+        [int]$ans = $ans
+    } while ($ans -ne 1 -and $ans -ne 2)
+    return [int]$ans
+}
+# ------------------------------------------------------------------------------
+# --- Function: video_format ---
+# Purpose: Prompt for output video container (avi/mp4).
+# Returns: [string] "avi" or "mp4".
+function video_format {
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.videoformat0 -ForegroundColor Green
+        $fmt = Read-Host -Prompt $text_msg.videoformat1
+        $fmt = ($fmt.Trim()).ToLower()
+    } while ($fmt -ne "avi" -and $fmt -ne "mp4")
+    return [string]$fmt
+}
+# ------------------------------------------------------------------------------
+# --- Function: playlist_range ---
+# Purpose: Ask the user to provide a playlist range (from..to) or skip.
+# Params: [ref] rangeOut - returns an array: [yesNo, from?, to?].
+
+function playlist_range([ref]$rangeOut) {
+    $arr = @()
+
+    # Ask: 1 (use range) or 2 (all)
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.playlist_range0 -ForegroundColor Yellow
+        $ynRaw = Read-Host
+        $yn = 0
+    } while (-not [int]::TryParse($ynRaw, [ref]$yn) -or ($yn -notin 1, 2))
+
+    $arr += [int]$yn
+
+    if ($yn -eq 1) {
+        do {
+            Start-Sleep -Milliseconds 300
+            Write-Host ""
+            Write-Host $text_msg.playlist_range1 -ForegroundColor Yellow
+            $fromRaw = Read-Host
+            Write-Host $text_msg.playlist_range2 -ForegroundColor Yellow
+            $toRaw = Read-Host
+
+            $from = 0; $to = 0
+            $okFrom = [int]::TryParse($fromRaw, [ref]$from)
+            $okTo   = [int]::TryParse($toRaw,   [ref]$to)
+        } until ($okFrom -and $okTo)
 		
-	return [string]$quality
-	
-}
-function audio_0_1(){
-	do
-		{
-			SLEEP 1
-			write-host ""
-			[int]$audio_yes_no = ($(Write-Host $text_msg.audio010 -ForegroundColor Yellow)) + ($(Write-Host $text_msg.audio011 -ForegroundColor yellow -NoNewLine ; Read-Host))
-		}while(($audio_yes_no -ne 1) -and ($audio_yes_no -ne 2))
-	return [int]$audio_yes_no
+        $arr += $from
+        $arr += $to
+    }
+
+    # Return a flat array like: @( <1-or-2>, <from?>, <to?> )
+    $rangeOut.Value = $arr
 }
 
-function video_0_1(){
-	do
-		{
-			SLEEP 1
-			write-host ""
-			[int]$video_yes_no = ($(Write-Host $text_msg.video010 -ForegroundColor Yellow)) + ($(Write-Host $text_msg.video011 -ForegroundColor yellow -NoNewLine ; Read-Host))
-		}while(($video_yes_no -ne 1  ) -and ($video_yes_no -ne 2))
-	return [int]$video_yes_no
+
+# ------------------------------------------------------------------------------
+# --- Function: ytdlp_download_audio ---
+# Purpose: Call yt-dlp to extract MP3 audio with the requested bitrate.
+# Params: track, quality, output_directory, ffmpegPath.
+
+function ytdlp_download_audio([string]$track, [string]$quality, [string]$output_directory, [string]$ffmpegPath) {
+    $args = @(
+        '--ignore-errors'
+        '--ffmpeg-location', $ffmpegPath
+        '--format', 'bestaudio'
+        '--audio-format', 'mp3'
+        '--extract-audio'
+        '--audio-quality', $quality
+        '--output', "$output_directory\%(title)s.%(ext)s"
+        $track
+    )
+    & $yt_dlp @args
+}
+# ------------------------------------------------------------------------------
+# --- Function: ytdlp_download_video ---
+# Purpose: Call yt-dlp to download best video+audio and merge to selected container.
+# Params: track, video_format, output_directory, ffmpegPath.
+function ytdlp_download_video([string]$track, [string]$video_format, [string]$output_directory, [string]$ffmpegPath) {
+    $args = @(
+        '--ignore-errors'
+        '--ffmpeg-location', $ffmpegPath
+        '-f', 'bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best'
+        '--merge-output-format', $video_format
+        '--no-playlist'
+        '--output', "$output_directory\%(title)s.%(ext)s"
+        $track
+    )
+    & $yt_dlp @args
 }
 
-function video_format(){
-	do
-		{
-			SLEEP 1
-			write-host ""
-			[string]$viedo_format = ($(Write-Host $text_msg.videoformat0 -ForegroundColor green)) + ($(Write-Host $text_msg.videoformat1 -ForegroundColor yellow -NoNewLine ; Read-Host))
-		}while(($viedo_format -ne "avi") -and ($viedo_format -ne "mp4"))
-	return [string]$viedo_format
+# ------------------------------------------------------------------------------
+# 1) Manual URL input -> audio
+# --- Function: download_song ---
+# Purpose: Interactive flow to paste individual URLs, choose bitrate and output folder, then download audio.
+function download_song {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Write-Host $text_msg.downloadsongintro -ForegroundColor Yellow
+    }
+
+    $outList = "$recources_main_dir\songs_out.txt"
+    if (Test-Path $outList) { Remove-Item $outList -Force }
+
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.downloadsonginfo0 -ForegroundColor Green
+        Write-Host $text_msg.downloadsonginfo1 -ForegroundColor Green
+        $s = Read-Host -Prompt $text_msg.downloadsonginfo2
+        $s = $s.Trim()
+        if ($s -and $s -ne 'q') { filter_links $s }
+    } until ($s -eq 'q')
+
+    [string]$quality = audio_quality
+
+    $source = Get-Content -Path $outList -ErrorAction SilentlyContinue | Where-Object { $_ -and $_.Trim() }
+    [int]$lines_var = $source.Count
+    if ($lines_var -eq 0) {
+        Write-Host "No links to download." -ForegroundColor Yellow
+        return
+    }
+
+    $output_directory = Select-Folder
+    if (-not $output_directory) { return }
+
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+    [int]$song_count = 0
+    foreach ($track in $source) {
+        $song_count++
+        ytdlp_download_audio -track $track -quality $quality -output_directory $output_directory -ffmpegPath $ffmpegPath
+        $lines_var--
+    }
+
+    Remove-Item -Path $outList -Force -ErrorAction SilentlyContinue
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
 }
 
-function playlist_range($playlist_range_yes_no, $playlist_range_1, $playlist_range_2){
-	$playlist_range_yes_no = $null
-	$playlist_range_array = @()
-	do
-		{
-			SLEEP 1
-			write-host ""
-			[int]$playlist_range_yes_no = ($(write-host $text_msg.playlist_range0 -ForegroundColor Yellow ; Read-Host ))
-		}while(($playlist_range_yes_no -ne 1  ) -and ($playlist_range_yes_no -ne 2))
-		$playlist_range_array += , $playlist_range_yes_no
-	
-	if ( $playlist_range_yes_no -eq 1)
-		{
-			do
-				{
-					SLEEP 1
-					write-host ""
-					$playlist_range_1 = ($(Write-Host $text_msg.playlist_range1 -ForegroundColor yellow ; Read-Host))
-					$playlist_range_2 = ($(Write-Host $text_msg.playlist_range2 -ForegroundColor yellow ; Read-Host))
-				}until (($playlist_range_1 -match '^[0-9]*$') -and ($playlist_range_2 -match '^[0-9]*$'))
-			$playlist_range_array += , $playlist_range_1
-			$playlist_range_array += , $playlist_range_2
-		}
-			return ,$playlist_range_array
-}
+# ------------------------------------------------------------------------------
+# 2) Download from file (list of URLs) -> audio
+# --- Function: download_from_list ---
+# Purpose: Load URLs from a text file, choose bitrate and output folder, then download audio.
+function download_from_list {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.downloadfromlistintro -ForegroundColor Yellow
+        Write-Host ""
+        Start-Sleep -Seconds 1
+    }
 
-function ytdlp_download_audio(){
-	if ( $song_count -eq $null )
-		{
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$track"
-		}
-	else
-		{
-			write-host	$text_msg.downloadingaudio0 $song_count $text_msg.downloadingaudio1 $lines_var -ForegroundColor yellow
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$track"
-		}
-}
-
-function ytdlp_download_video(){
-	write-host	$text_msg.downloadingvideo0 $song_count $text_msg.downloadingvideo1 $lines_var -ForegroundColor yellow
-	Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format"" --no-playlist  --output ""$output_directory""\%(title)s.%(ext)s " , "$track"
-}
-
-##############################################################################
-#1 FUNCTION TO DOWNLOAD FROM LINKS BY ENTERING THEM IN CONSOLE ONE BY ONE #1 #
-##############################################################################
-function download_song(){
-cls
-	if ($missing_exe -gt 0)
-	{
-		write-host ""
-		write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-		sleep 10
-		updates_menu
-	}
-	else
-	{
-		Write-Host $text_msg.downloadsongintro -ForegroundColor Yellow
-	}
-	#TEST IF OLD  LIST WITH LINK EXIST - IF SO - THEN REMOVE
-	$path2song_list_single = "$recources_main_dir\songs_out.txt"
-	If (Test-Path $path2song_list_single)
-		{
-			Remove-Item -Path $path2song_list_single
-		}
-	#DO LOOP FOR ENTER LINKS FROM YOUTUBE
-	do
-		{
-			SLEEP 1
-			#GET INPUT WITH YT LINK
-			Write-Host ""
-			[string]$s = ($(write-host $text_msg.downloadsonginfo0`n,$text_msg.downloadsonginfo1`n -ForegroundColor Green )) + ($(Write-Host $text_msg.downloadsonginfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
-			if ( $s -eq "q" )
-				{
-				}
-			else
-				{
-					#VAR WITH YT LINK TO FILTER REFERENCES TO A CHANNEL OR PLAYLIST
-					$testlink = "$s"
-					filter_links $testlink							
-				}
-		}until($s -eq "q"  )
-
-		[string]$quality = audio_quality
-			
-		#VAR WITH ENTERED YT LINKS
-		$source = Get-Content -Path "$recources_main_dir\songs_out.txt" | Where { $_ }
-		
-		#LINES COUNTER
-		$lines_var = Get-Content "$recources_main_dir\songs_out.txt" | Where { $_ }
-		
-    	[int]$lines_var = $lines_var.Count
-		#PATH TO OUTPUT DIR
-		$output_directory = Select-Folder
-		$free_space = Get-FreeSpace
-		sleep 1
-		write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-		sleep 2
-		#SHOW OWER EXPLORER THE TARGET DIR
-		Start explorer.exe $output_directory
-		[int]$lines_var-=1
-		[int]$song_count=0
-		#MAIN LOOP TO DOWNLOAD ENTERED AND CORRECTED SONGS FROM YT LINKS
-		ForEach ($track in $source)
-			{
-				$song_count+= 1 #COUNTER FOR SONGS TO DOWNLOAD
-				ytdlp_download_audio
-				$lines_var-= 1 #SUB - HOW MANY LEFT
-			}
-		#REMOVE PATH WITH SONG LIST CREATED AFTER DOWNLOAD LOOP
-		Remove-Item -Path "$recources_main_dir\songs_out.txt" -Force
-
-		write-host ""
-		Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
-}
-#######################################################################
-#2 FUNCTION TO DOWNLOAD FROM LINKS WHICH ARE ALREADY SAVED IN FILE #2 #
-#######################################################################
-Function download_from_list(){
-    cls
-	
-	if ($missing_exe -gt 0)
-		{
-			write-host ""
-			write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-			sleep 10
-			updates_menu
-		}
-	else
-		{
-			write-host ""
-			sleep 1
-			Write-Host $text_msg.downloadfromlistintro -ForegroundColor Yellow
-			write-host ""
-			sleep 1
-		}
-	#GET A PATH TO FILE FROM THE EXPLORER GUI THAT CONTAINS PREVIOUS SAVED LINKS TO YT INTO VAR $selected_file_var
     warning_select_file
     $selected_file_var = Select-File
-	#REMOVE EMPTY LINES IF EXIST
-    $d = Get-Content -Path $selected_file_var | Where { $_ }
-	
-                           
-	foreach ( $line in $d )
-		{
-			$testlink = $line
-			filter_links 
-		}
-	#GET AUDIO QUALITY
-	[string]$quality = audio_quality
+    if (-not $selected_file_var) { return }
 
-    #PATH TO OUTPUT DIR
+    $outList = "$recources_main_dir\songs_out.txt"
+    if (Test-Path $outList) { Remove-Item $outList -Force }
+
+    $d = Get-Content -Path $selected_file_var -ErrorAction SilentlyContinue | Where-Object { $_ -and $_.Trim() }
+    foreach ($line in $d) { filter_links $line }
+
+    [string]$quality = audio_quality
+
     $output_directory = Select-Folder
-	#GET FREE SPACE
-	$free_space = Get-FreeSpace
+    if (-not $output_directory) { return }
 
-	sleep 1
-	write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-	sleep 2
-	#SHOW OWER WINDWOS EXPLORER THE TARGET DIR
-    Start explorer.exe $output_directory
-	#LINES COUNTER
-	$lines_var = Get-Content "$recources_main_dir\songs_out.txt" | Where { $_ }
-	$lines_var = $lines_var.trim() -ne ""
-	[int]$lines_var = $lines_var.Count
-    [int]$lines_var-=1
-	[int]$song_count=0
-	
-	#$selected_file_var POINTET TO songs_out.txt
-	$selected_file_var = "$recources_main_dir\songs_out.txt"
-	#PARSE FILE CONTENT
-	$source = Get-Content -Path $selected_file_var
-	
-	#MAIN LOOP FOR DOWNLOAD
-	ForEach ($track in $source) 
-		{
-			$song_count+= 1 #COUNTER FOR SONGS TO DOWNLOAD
-			ytdlp_download_audio
-			$lines_var-= 1 #SUB - HOW MANY LEFT
-		}
-		
-	Remove-Item -Path "$recources_main_dir\songs_out.txt"
-	
-	write-host ""
-	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline			
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+
+    $source = Get-Content -Path $outList | Where-Object { $_ -and $_.Trim() }
+    [int]$lines_var = $source.Count
+    [int]$song_count = 0
+
+    foreach ($track in $source) {
+        $song_count++
+        ytdlp_download_audio -track $track -quality $quality -output_directory $output_directory -ffmpegPath $ffmpegPath
+        $lines_var--
+    }
+
+    Remove-Item -Path $outList -Force -ErrorAction SilentlyContinue
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
 }
-###########################################
-#3 FUNCTION TO DOWNLOAD WHOLE PLAYLIST #3 #
-###########################################
-Function download_playlist(){
-    cls
-	
-	if ($missing_exe -gt 0)
-		{
-			write-host ""
-			write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-			sleep 10
-			updates_menu
-		}
-	else
-		{
-			write-host ""
-			sleep 1
-			Write-Host $text_msg.downloadplaylistintro -ForegroundColor Yellow
-			write-host ""
-			SLEEP 1		
-		}	
-		
-	$range_array = playlist_range
-	$playlist_range_yes_no = $($range_array[0]) 
-	
-	[string]$playlist_ID_yt = ($(write-host $text_msg.downloadplaylistinfo0`n,$text_msg.downloadplaylistinfo1 -ForegroundColor yellow )) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green) + ($(Write-Host $text_msg.downloadplaylistinfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
-		
-    #GET AUDIO QUALITY
-	[string]$quality = audio_quality
 
-    #PATH TO OUTPUT DIR
+# ------------------------------------------------------------------------------
+# 3) Playlist -> audio (+ range)
+
+# --- Function: download_playlist ---
+# Purpose: Download audio from a YouTube playlist (optionally a sub-range).
+function download_playlist {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.downloadplaylistintro -ForegroundColor Yellow
+        Write-Host ""
+        Start-Sleep -Seconds 1
+    }
+
+    $range = $null; playlist_range ([ref]$range)
+    $playlist_range_yes_no = [int]$range[0]
+
+    Write-Host $text_msg.downloadplaylistinfo0 -ForegroundColor Yellow
+    Write-Host $text_msg.downloadplaylistinfo1 -ForegroundColor Yellow
+    Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta
+    Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor Green
+    $playlist_ID_yt = Read-Host -Prompt $text_msg.downloadplaylistinfo2
+
+    [string]$quality = audio_quality
     $output_directory = Select-Folder
-	$free_space = Get-FreeSpace
-	sleep 1
-	write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-	sleep 2
-	#SHOW OWER WINDWOS EXPLORER THE TARGET DIR
-    Start explorer.exe $output_directory
-	#MAIN DOWNLOAD PROCESS
-	if ($playlist_range_yes_no -eq 1)
-		{
-			$from = $($range_array[1]) 
-			$to = $($range_array[2])
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$playlist_ID_yt"
-		}
-	else
-		{
-			Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --format bestaudio --audio-format mp3 --extract-audio --audio-quality ""$quality"" --yes-playlist --output ""$output_directory""\%(title)s.%(ext)s " , "$playlist_ID_yt"
-		}
-	write-host ""
-	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
-}
-##########################################
-#4 FUNCTION TO DOWNLOAD WHOLE CHANNEL #4 #
-##########################################
-Function download_channel(){
-	cls
-	if ($missing_exe -gt 0)
-		{
-			write-host ""
-			write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-			sleep 10
-			updates_menu
-		}
-	else
-		{
-			sleep 1
-			Write-Host $text_msg.downloadchannelintro -ForegroundColor Yellow
-			write-host ""
-			SLEEP 1
-		}	
-	[string]$channel_ID_yt = ($(write-host $text_msg.downloadchannelinfo0`n,$text_msg.downloadchannelinfo1 -ForegroundColor yellow )) + ($(Write-Host $text_msg.downloadchannelinfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
-	[string]$channel_ID_yt = "https://www.youtube.com/channel/$channel_ID_yt"
+    if (-not $output_directory) { return }
 
-    #GET AUDIO QUALITY
-	[string]$quality = audio_quality
-    #PATH TO OUTPUT DIR
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+	
+	$args = @(
+		'--ignore-errors'
+		'--ffmpeg-location', $ffmpegPath
+		'--format','bestaudio'
+		'--audio-format','mp3'
+		'--extract-audio'
+		'--audio-quality', $quality
+		'--yes-playlist'
+		'--output', "$output_directory\%(title)s.%(ext)s"
+		$playlist_ID_yt
+	)	
+    if ($playlist_range_yes_no -eq 1) {
+        $from = $range[1]; $to = $range[2]
+        $args = @(
+			'--ignore-errors'
+			'--ffmpeg-location', $ffmpegPath
+			'--playlist-items', "$from-$to"
+			'--format','bestaudio'
+			'--audio-format','mp3'
+			'--extract-audio'
+			'--audio-quality', $quality
+			'--yes-playlist'
+			'--output', "$output_directory\%(title)s.%(ext)s"
+			$playlist_ID_yt
+		)
+    }
+
+    & $yt_dlp @args
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
+}
+
+# ------------------------------------------------------------------------------
+# 4) Channel -> audio
+# --- Function: download_channel ---
+# Purpose: Download audio from a YouTube channel by Channel ID.
+function download_channel {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.downloadchannelintro -ForegroundColor Yellow
+        Write-Host ""
+        Start-Sleep -Seconds 1
+    }
+
+    Write-Host $text_msg.downloadchannelinfo0 -ForegroundColor Yellow
+    Write-Host $text_msg.downloadchannelinfo1 -ForegroundColor Yellow
+    $channel_ID_yt_raw = Read-Host -Prompt $text_msg.downloadchannelinfo2
+    [string]$channel_ID_yt = "https://www.youtube.com/channel/$channel_ID_yt_raw"
+
+    [string]$quality = audio_quality
     $output_directory = Select-Folder
-	#SHOW OWER WINDWOS EXPLORER THE TARGET DIR
-    Start explorer.exe $output_directory
-	#GET FREE SPACE
-	$free_space = Get-FreeSpace
-	sleep 1
-	write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-	sleep 2
-	#MAIN DOWNLOAD PROCESS
-    Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "-ciw --extract-audio --audio-format mp3 --ffmpeg-location ""$ffmpeg"" --audio-quality ""$quality"" --output ""$output_directory""\%(title)s.%(ext)s " , "$channel_ID_yt"
-	
-	write-host ""
-	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
+    if (-not $output_directory) { return }
 
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+
+    $args = @(
+        '-ciw'
+        '--extract-audio'
+        '--audio-format','mp3'
+        '--ffmpeg-location', $ffmpegPath
+        '--audio-quality', $quality
+        '--output', "$output_directory\%(title)s.%(ext)s"
+        $channel_ID_yt
+    )
+    & $yt_dlp @args
+
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
 }
-##############################################################################################################
-#5 FUNCTION TO DOWNLOAD VIDEO OR AUDIO FROM SINGLE LINKS ENTERED IN THE TERMINAL OR ALREADY PREPARED LIST #5 #
-##############################################################################################################
-Function download_movie_and_or_music_from_list(){
-	cls
-	if ($missing_exe -gt 0)
-		{
-			write-host ""
-			write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-			sleep 10
-			updates_menu
-		}
-	else
-		{
-			sleep 1
-			Write-Host $text_msg.fun5intro -ForegroundColor Yellow
-			write-host ""
-			SLEEP 1
-		}			
-	$path2song_list_select_file = "$recources_main_dir\songs_out.txt"
-	If (Test-Path $path2song_list_select_file)
-		{
-			Remove-Item -Path $path2song_list_select_file
-		}
-	do
-		{
-			SLEEP 1
-			write-host ""
-			[int]$list_console = ($(write-host $text_msg.fun5listorterminal0`n -ForegroundColor Yellow )) + ($(Write-Host $text_msg.fun5listorterminal1 -ForegroundColor yellow -NoNewLine ; Read-Host))
-		}while(($list_console -ne 1  ) -and ($list_console -ne 2))
 
-	if ( $list_console -eq 1)
-		{
-			#TXT FILE WITH SAVED YT LINKS
-			warning_select_file
-			$selected_file_var = Select-File
-			#GET LINKS FROM THE TXT FILE
+# ------------------------------------------------------------------------------
+# 5) List (file/terminal) -> audio and/or  wideo
+# --- Function: download_movie_and_or_music_from_list ---
+# Purpose: Mixed mode: from a list (file or console), download video and optionally audio as MP3.
+function download_movie_and_or_music_from_list {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.fun5intro -ForegroundColor Yellow
+        Write-Host ""
+        Start-Sleep -Seconds 1
+    }
 
-			$source = Get-Content -Path $selected_file_var | Where { $_ }
-			
-			foreach ( $line in $source )
-				{
-					$testlink = $line
-					filter_links	#FILTER PARSED LINKS FROM FILE					
-				}
-		}
-	elseif ( $list_console -eq 2)
-		{
-			do
-				{
-					SLEEP 1
-					#GET INPUT WITH YT LINK
-					Write-Host ""
-					[string]$link = ($(write-host $text_msg.downloadsonginfo0`n,$text_msg.downloadsonginfo1`n -ForegroundColor Green )) + ($(Write-Host $text_msg.downloadsonginfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
-						if ( $link -eq "q" )
-							{
-							}
-						else
-							{
-								#VAR WITH YT LINK TO FILTER REFERENCES TO A CHANNEL OR PLAYLIST
-								$testlink = "$link"
-								filter_links $testlink							
-							}
-				}until($link -eq "q"  )
-		}
-	#SET PATH FOR LINK LIST
-	$source = Get-Content -Path "$recources_main_dir\songs_out.txt" | Where { $_ }
-	
-	$viedo_format = video_format
-	$audio_yes_no = audio_0_1
+    $outList = "$recources_main_dir\songs_out.txt"
+    if (Test-Path $outList) { Remove-Item $outList -Force }
 
-    if ( $audio_yes_no -eq 1 )
-        {
-			#GET AUDIO QUALITY
-			[string]$quality = audio_quality
-		}
-	#PATH TO OUTPUT DIR
-	$output_directory = Select-Folder
-	
-	$free_space = Get-FreeSpace
-	
-	sleep 1
-	write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-	sleep 2	
-	Start explorer.exe $output_directory
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.fun5listorterminal0 -ForegroundColor Yellow
+        $list_console = Read-Host -Prompt $text_msg.fun5listorterminal1
+        [int]$list_console = $list_console
+    } while ($list_console -ne 1 -and $list_console -ne 2)
 
-	if ( $list_console -eq 1)
-		{	
-			[int]$lines_var = $source.Count	
-			[int]$lines_var-=1
-			[int]$song_count=0		
-			if ( $audio_yes_no -eq 1 )
-				{			
-					ForEach ($track in $source ) 
-						{
-							$song_count+= 1 #COUNTER FOR SONGS TO DOWNLOAD
-							ytdlp_download_audio
-							ytdlp_download_video
-							$lines_var-= 1 #SUB - HOW MANY LEFT
-						}
-				}
-			if ( $audio_yes_no -eq 2 )
-				{			
-					ForEach ($track in $source) 
-						{
-							$song_count+= 1 #COUNTER FOR SONGS TO DOWNLOAD
-							ytdlp_download_video
-							$lines_var-= 1 #SUB - HOW MANY LEFT
-						}
-				}		
-		}
-	if ( $list_console -eq 2)
-		{
-			[int]$lines_var = $source.Count	
-			[int]$lines_var-=1
-			[int]$song_count=0
-	
-			
-			if ( $audio_yes_no -eq 1 )
-				{			
-					ForEach ($track in $source ) 
-						{
-							$song_count+= 1 #COUNTER FOR SONGS TO DOWNLOAD
-							ytdlp_download_audio
-							ytdlp_download_video
-							$lines_var-= 1 #SUB - HOW MANY LEFT
-						}
-				}
-			if ( $audio_yes_no -eq 2 )
-				{			
-					ForEach ($track in $source) 
-						{
-							$song_count+= 1 #COUNTER FOR SONGS TO DOWNLOAD
-							ytdlp_download_video
-							$lines_var-= 1 #SUB - HOW MANY LEFT
-						}
-				}
-     	
-		}
-    	
-	If (Test-Path "$recources_main_dir\songs_out.txt")
-		{
-			Remove-Item -Path "$recources_main_dir\songs_out.txt"
-		}
-	
-	write-host ""
-	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
+    if ($list_console -eq 1) {
+        warning_select_file
+        $selected_file_var = Select-File
+        if (-not $selected_file_var) { return }
+        $sourceIn = Get-Content -Path $selected_file_var | Where-Object { $_ -and $_.Trim() }
+        foreach ($line in $sourceIn) { filter_links $line }
+    } elseif ($list_console -eq 2) {
+        do {
+            Start-Sleep -Milliseconds 300
+            Write-Host ""
+            Write-Host $text_msg.downloadsonginfo0 -ForegroundColor Green
+            Write-Host $text_msg.downloadsonginfo1 -ForegroundColor Green
+            $link = Read-Host -Prompt $text_msg.downloadsonginfo2
+            $link = $link.Trim()
+            if ($link -and $link -ne 'q') { filter_links $link }
+        } until ($link -eq 'q')
+    }
 
+    $source = Get-Content -Path $outList -ErrorAction SilentlyContinue | Where-Object { $_ -and $_.Trim() }
+    if (-not $source -or $source.Count -eq 0) { Write-Host "No links." -ForegroundColor Yellow; return }
+
+    $video_format = video_format
+    $audio_yes_no = audio_0_1
+    if ($audio_yes_no -eq 1) { [string]$quality = audio_quality }
+
+    $output_directory = Select-Folder
+    if (-not $output_directory) { return }
+
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+
+    [int]$lines_var  = $source.Count
+    [int]$song_count = 0
+
+    foreach ($track in $source) {
+        $song_count++
+        if ($audio_yes_no -eq 1) {
+            ytdlp_download_audio -track $track -quality $quality -output_directory $output_directory -ffmpegPath $ffmpegPath
+            ytdlp_download_video -track $track -video_format $video_format -output_directory $output_directory -ffmpegPath $ffmpegPath
+        } else {
+            ytdlp_download_video -track $track -video_format $video_format -output_directory $output_directory -ffmpegPath $ffmpegPath
+        }
+        $lines_var--
+    }
+
+    if (Test-Path $outList) { Remove-Item -Path $outList -Force }
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
 }
-###########################################################
-#6 DOWNLOADING AUDIO OR VIDEO FROM PLAYLIST OR CHANNEL #6 #
-###########################################################
-Function download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL(){
-cls
-	if ($missing_exe -gt 0)
-		{
-			write-host ""
-			write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-			sleep 10
-			updates_menu
-		}
-	else
-		{
-			sleep 1
-			Write-Host $text_msg.fun6intro -ForegroundColor Yellow
-			write-host ""
-			SLEEP 1
-		}	
-	
-	If (Test-Path "$recources_main_dir\songs.txt")
-		{
-			Remove-Item -Path "$recources_main_dir\songs.txt"
-		}
-	do
-		{
-			SLEEP 1
-			Write-Host ""
-			(write-host $text_msg.downloadplaylistinfo0`n,$text_msg.downloadplaylistinfo1 -ForegroundColor yellow) + (Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta) + (Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green)
-			write-host ""
-			($(write-host $text_msg.downloadchannelinfo0`n,$text_msg.downloadchannelinfo1 -ForegroundColor yellow )) + ($(Write-Host $text_msg.downloadchannelinfo2`n -ForegroundColor yellow -NoNewLine ))
-			write-host ""
-			[string]$s = ($(Write-Host $text_msg.downloadsonginfo2 -ForegroundColor yellow -NoNewLine ; Read-Host))
-			if ( $s -eq "q" )
-				{
-				}else{$s >> "$recources_main_dir\songs.txt"}          
-		}until($s -eq "q"  )
-		
-	$viedo_format = video_format
-	$audio_yes_no = audio_0_1
-	
-	$source = Get-Content -Path "$recources_main_dir\songs.txt" | Where { $_ }
-	#PATH TO OUTPUT DIR
-	$output_directory = Select-Folder
-	Start explorer.exe $output_directory
-	$free_space = Get-FreeSpace
-	
-	sleep 1
-	write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-	sleep 2		
-	$lines_var-=$null
-	$song_count=$null
-	if ( $audio_yes_no -eq 1 )
-		{			
-			ForEach ($track in $source ) 
-				{
-					ytdlp_download_audio
-					ytdlp_download_video
-				}
-		}
-	if ( $audio_yes_no -eq 2 )
-		{			
-			ForEach ($track in $source) 
-				{
-					ytdlp_download_video
-				}
-		}
-		Remove-Item -Path "$recources_main_dir\songs.txt"
-    write-host ""
-	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
-}
-###############################################
-#7 DOWNLOAD FROM PRIVATE PLAYLIST = COOKIES #7#
-###############################################
-function download_from_cookie(){
-cls
-	if ($missing_exe -gt 0)
-		{
-			write-host ""
-			write-host	$text_msg.optionwithoutexe0`n,$text_msg.optionwithoutexe1  -ForegroundColor Red
-			sleep 10
-			updates_menu
-		}
-	else
-		{
-			sleep 1
-			Write-Host $text_msg.downloadfromcookieintro -ForegroundColor Yellow
-			write-host ""
-			SLEEP 1
-		}	
-	
-	$path2song_list_single = "$recources_main_dir\songs.txt"
-	If (Test-Path $path2song_list_single)
-		{
-			Remove-Item -Path $path2song_list_single
-		}
-#	(write-host $text_msg.downloadfromcookiewarn0`n -ForegroundColor yellow) + (write-host $text_msg.downloadfromcookiewarn1`n,$text_msg.downloadfromcookiewarn2`n -ForegroundColor RED) + (write-host $text_msg.downloadfromcookiewarn3`n -ForegroundColor yellow) + (write-host $text_msg.downloadfromcookiewarn4`n -ForegroundColor red) 
-	write-host ""
-	write-host $text_msg.downloadfromcookiewarn3`n -ForegroundColor yellow
-	SLEEP 2
-	
-	$range_array = playlist_range
-	$playlist_range_yes_no = $($range_array[0])
-	
-	[string]$playlist_ID_yt = ($(write-host $text_msg.downloadplaylistinfo0`n,$text_msg.downloadplaylistinfo1 -ForegroundColor yellow )) + $(Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta ) + $(Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor green) + ($(Write-Host $text_msg.downloadplaylistinfo2`n -ForegroundColor yellow -NoNewLine ; Read-Host))
 
-	If (Test-Path $path2song_list_single)
-		{
-			$entered_playlist_console = Get-Content -Path "$recources_main_dir\songs.txt"	| Where { $_ }
-		}	
-	
-	$video_yes_no = video_0_1
-	
-	if ( $video_yes_no -eq 1 )
-		{	
-			sleep 1
-			$viedo_format = video_format					
-		}
-		
-	if ( $video_yes_no -eq 1 )
-		{
-			SLEEP 1
-			$audio_yes_no = audio_0_1				
-		}
-    
-	if (( $audio_yes_no -eq 1 ) -or ( $video_yes_no -eq 2 ))
-		{
-			#GET AUDIO QUALITY
-			[string]$quality = audio_quality		
-		}
-		
-	#PATH TO OUTPUT DIR
-	$output_directory = Select-Folder
-	Start explorer.exe $output_directory
-	
-	$free_space = Get-FreeSpace
-	
-	sleep 1
-	write-host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
-	sleep 2	
-	
-	if ( $video_yes_no -eq 1)
-		{
-			if ( $audio_yes_no -eq 1 )
-				{
-					write-host " "
-					(write-host $text_msg.downloadfromcookieaudio0`n,$text_msg.downloadfromcookieaudio1 -ForegroundColor yellow)
-					write-host " "
-						if ($playlist_range_yes_no -eq 1)
-							{
-								$from = $($range_array[1]) 
-								$to = $($range_array[2])
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-							}
-						else
-							{
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-							}
-					write-host " "
-					(write-host $text_msg.downloadfromcookieaudio2 -ForegroundColor yellow)
-					(write-host $text_msg.downloadfromcookievideo0`n -ForegroundColor yellow)
-					write-host " "
-						if ($playlist_range_yes_no -eq 1)
-							{
-								$from = $($range_array[1]) 
-								$to = $($range_array[2])
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-							}
-						else
-							{
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-							}
-					write-host " "
-					(write-host $text_msg.downloadfromcookievideo1`n -ForegroundColor yellow)
-						
-				}
-			if ( $audio_yes_no -eq 2 )
-				{
-					write-host " "
-					(write-host $text_msg.downloadfromcookievideo0`n -ForegroundColor yellow)
-					write-host " "
-					if ($playlist_range_yes_no -eq 1)
-						{
-								$from = $($range_array[1]) 
-								$to = $($range_array[2])
-								Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-						}
-					else
-						{
-							Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg""  -f bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best --merge-output-format ""$viedo_format""  --output ""$output_directory""\%(title)s.%(ext)s --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-						}
-					write-host " "
-					(write-host $text_msg.downloadfromcookievideo1`n -ForegroundColor yellow)
-				}
-		}	
-	
-	if ( $video_yes_no -eq 2)
-		{	
-			write-host " "
-			(write-host $text_msg.downloadfromcookieaudio1 -ForegroundColor yellow)
-			write-host " "
-			if ($playlist_range_yes_no -eq 1)
-				{
-					$from = $($range_array[1]) 
-					$to = $($range_array[2])
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --playlist-items ""$from"":""$to"" --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-				}
-			else
-				{
-					Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList "--ignore-errors --ffmpeg-location ""$ffmpeg"" --extract-audio --audio-format mp3 --output ""$output_directory""\%(title)s.%(ext)s --audio-quality ""$quality"" --cookies-from-browser firefox+gnomekeyring " , "$playlist_ID_yt"
-				}
-			write-host " "
-			(write-host $text_msg.downloadfromcookieaudio2 -ForegroundColor yellow)
-								
-		}		
-	write-host ""
-	Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewline
-	Remove-Item -Path "$recources_main_dir\songs.txt"		
-}
-##############################
-#8 UPDATES MENU FUNCTIONS #8 #
-##############################
-Function updates_menu(){
-	############################################################
-	#1 CHECK THE POBIERAK VER AND AFTER APPROVAL UPDATE IT # 1 #
-	############################################################
-    Function check_pobierak_version(){ #1 FUNCTION TO CHECK IF NEW VERSION OF POBIERAK IS AVAILABLE #1
+# ------------------------------------------------------------------------------
+# 6) List (PLAYLIST/CHANNEL) -> audio and/or wideo
+# --- Function: download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL ---
+# Purpose: Accept playlist or channel URLs and download video and optionally audio.
+function download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.fun6intro -ForegroundColor Yellow
+        Write-Host ""
+        Start-Sleep -Seconds 1
+    }
 
-        cls
-        $path_to_temp = "$recources_main_dir\temp"
-		#IF BEFORE WAS AN TEMP DIR IN RESOURCES WITH SHOULD NOT HAPPEN THEN REMOVE IT AND THE CONTENT IF NOT PRESENT THEN CREATE IT
-        If(!(test-path -PathType container $path_to_temp))
-            {
-                New-Item -ItemType Directory -Path $path_to_temp
+    $songsTxt = "$recources_main_dir\songs.txt"
+    if (Test-Path $songsTxt) { Remove-Item $songsTxt -Force }
+
+    do {
+        Start-Sleep -Milliseconds 300
+        Write-Host ""
+        Write-Host $text_msg.downloadplaylistinfo0 -ForegroundColor Yellow
+        Write-Host $text_msg.downloadplaylistinfo1 -ForegroundColor Yellow
+        Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta
+        Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor Green
+        Write-Host ""
+        Write-Host $text_msg.downloadchannelinfo0 -ForegroundColor Yellow
+        Write-Host $text_msg.downloadchannelinfo1 -ForegroundColor Yellow
+        Write-Host $text_msg.downloadchannelinfo2 -ForegroundColor Yellow
+        Write-Host ""
+        $s = Read-Host -Prompt $text_msg.downloadsonginfo2
+        $s = $s.Trim()
+        if ($s -and $s -ne 'q') { $s | Add-Content -Path $songsTxt }
+    } until ($s -eq 'q')
+
+    $video_format = video_format
+    $audio_yes_no = audio_0_1
+    $source       = Get-Content -Path $songsTxt | Where-Object { $_ -and $_.Trim() }
+
+    $output_directory = Select-Folder
+    if (-not $output_directory) { return }
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+
+    if ($audio_yes_no -eq 1) {
+        [string]$quality = audio_quality
+        foreach ($track in $source) {
+            $argsA = @(
+                '--ignore-errors'
+                '--ffmpeg-location', $ffmpegPath
+                '--extract-audio','--audio-format','mp3'
+                '--output', "$output_directory\%(title)s.%(ext)s"
+                '--audio-quality', $quality
+                $track
+            )
+            & $yt_dlp @argsA
+
+            $argsV = @(
+                '--ignore-errors'
+                '--ffmpeg-location', $ffmpegPath
+                '-f','bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best'
+                '--merge-output-format', $video_format
+                '--output', "$output_directory\%(title)s.%(ext)s"
+                $track
+            )
+            & $yt_dlp @argsV
+        }
+    } else {
+        foreach ($track in $source) {
+            $argsV = @(
+                '--ignore-errors'
+                '--ffmpeg-location', $ffmpegPath
+                '-f','bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best'
+                '--merge-output-format', $video_format
+                '--output', "$output_directory\%(title)s.%(ext)s"
+                $track
+            )
+            & $yt_dlp @argsV
+        }
+    }
+
+    Remove-Item -Path $songsTxt -Force -ErrorAction SilentlyContinue
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
+}
+
+# ------------------------------------------------------------------------------
+# 7) Private playlists – cookies-from-browser (Windows)
+# --- Function: download_from_cookie ---
+# Purpose: Use browser cookies to access private playlists; supports range/video/audio options.
+function download_from_cookie {
+    Clear-Host
+    if ($missing_exe -gt 0) {
+        Write-Host ""
+        Write-Host $text_msg.optionwithoutexe0 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe1 -ForegroundColor Red
+        Start-Sleep -Seconds 4
+        updates_menu
+        return
+    } else {
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.downloadfromcookieintro -ForegroundColor Yellow
+        Write-Host ""
+        Start-Sleep -Seconds 1
+    }
+
+    Write-Host ""
+    Write-Host $text_msg.downloadfromcookiewarn3 -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+
+    $range = $null; playlist_range ([ref]$range)
+    $playlist_range_yes_no = [int]$range[0]
+
+    Write-Host $text_msg.downloadplaylistinfo0 -ForegroundColor Yellow
+    Write-Host $text_msg.downloadplaylistinfo1 -ForegroundColor Yellow
+    Write-Host "https://www.youtube.com/playlist?list=" -NoNewline -ForegroundColor Magenta
+    Write-Host "PLEsNcyT1Z66QTRRPXdJZJdPoqdud4wNKP" -ForegroundColor Green
+    $playlist_ID_yt = Read-Host -Prompt $text_msg.downloadplaylistinfo2
+
+    $video_yes_no = video_0_1
+    if ($video_yes_no -eq 1) {
+        Start-Sleep -Milliseconds 300
+        $video_format = video_format
+        Start-Sleep -Milliseconds 300
+        $audio_yes_no = audio_0_1
+    }
+
+    if (($audio_yes_no -eq 1) -or ($video_yes_no -eq 2)) {
+        [string]$quality = audio_quality
+    }
+
+    $output_directory = Select-Folder
+    if (-not $output_directory) { return }
+    Start-Process explorer.exe -ArgumentList $output_directory | Out-Null
+    $ffmpegPath = Resolve-FFmpegPath
+    if (-not $ffmpegPath) { Write-Host "ffmpeg.exe not found" -ForegroundColor Red; return }
+
+    $free_space = Get-FreeSpace $output_directory
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.freespace "$free_space GB." -ForegroundColor Yellow
+    Start-Sleep -Seconds 2
+
+    # AUDIO (if selected)
+    if ($video_yes_no -eq 2 -or $audio_yes_no -eq 1) {
+        $argsA = @(
+            '--ignore-errors'
+            '--ffmpeg-location', $ffmpegPath
+            '--extract-audio','--audio-format','mp3'
+            '--output', "$output_directory\%(title)s.%(ext)s"
+            '--audio-quality', $quality
+            '--cookies-from-browser', $BrowserForCookies
+            $playlist_ID_yt
+        )
+        if ($playlist_range_yes_no -eq 1) {
+            $from = $range[1]; $to = $range[2]
+            $argsA = @(
+            '--ignore-errors'
+            '--ffmpeg-location', $ffmpegPath
+			'--playlist-items', "$from-$to"
+            '--extract-audio','--audio-format','mp3'
+            '--output', "$output_directory\%(title)s.%(ext)s"
+            '--audio-quality', $quality
+            '--cookies-from-browser', $BrowserForCookies
+            $playlist_ID_yt
+			)	
+        }
+        & $yt_dlp @argsA
+        Write-Host ""
+        Write-Host $text_msg.downloadfromcookieaudio2 -ForegroundColor Yellow
+    }
+
+    # VIDEO (if selected)
+    if ($video_yes_no -eq 1) {
+        $argsV = @(
+            '--ignore-errors'
+            '--ffmpeg-location', $ffmpegPath
+            '-f','bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best'
+            '--merge-output-format', $video_format
+            '--output', "$output_directory\%(title)s.%(ext)s"
+            '--cookies-from-browser', $BrowserForCookies
+            $playlist_ID_yt
+        )
+        if ($playlist_range_yes_no -eq 1) {
+            $from = $range[1]; $to = $range[2]
+            $argsV = @(
+            '--ignore-errors'
+            '--ffmpeg-location', $ffmpegPath
+			'--playlist-items', "$from-$to"
+            '-f','bestvideo+bestaudio[ext=m4a]/bestvideo+bestaudio/best'
+            '--merge-output-format', $video_format
+            '--output', "$output_directory\%(title)s.%(ext)s"
+            '--cookies-from-browser', $BrowserForCookies
+            $playlist_ID_yt
+			)
+        }
+        & $yt_dlp @argsV
+        Write-Host ""
+        Write-Host $text_msg.downloadfromcookievideo1 -ForegroundColor Yellow
+    }
+
+    Write-Host ""
+    Write-Host $text_msg.downloadend -ForegroundColor Green -NoNewLine
+}
+
+# ------------------------------------------------------------------------------
+# 8) Updates – functions (IWR zamiast curl/BITS fallback)
+
+# --- Function: check_pobierak_version ---
+# Purpose: Download latest project ZIP from GitHub, compare versions, and optionally stage an update.
+# Returns: 1 to install, 2 to skip, or exits with rc=3 on update.
+
+function check_pobierak_version {
+    Clear-Host
+    $path_to_temp = "$recources_main_dir\temp"
+    if (-not (Test-Path -PathType Container $path_to_temp)) {
+        New-Item -ItemType Directory -Path $path_to_temp | Out-Null
+    } else {
+        Remove-Item $path_to_temp -Force -Recurse
+        New-Item -ItemType Directory -Path $path_to_temp | Out-Null
+    }
+
+    $zipPath = Join-Path $path_to_temp 'pobierak.zip'
+    Invoke-WebRequest -Uri "https://github.com/pagend0s/pobierak4windows/archive/refs/heads/main.zip" -OutFile $zipPath
+
+    Expand-Archive -Path $zipPath -DestinationPath "$path_to_temp\pobierak" -Force
+
+    $pob_present_line = Select-String -Path "$recources_main_dir\pobierak.ps1" -Pattern "pobierak_v" | Select-Object -First 1
+    $version_present  = $pob_present_line.Line.Split('=')[1] -replace '"','' -replace ' ',''
+    [double]$version_present_double = [string]$version_present
+
+    $pob_downloaded_line = Select-String -Path "$path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1" -Pattern "pobierak_v" | Select-Object -First 1
+    $version_downloaded  = $pob_downloaded_line.Line.Split('=')[1] -replace '"','' -replace ' ',''
+    [double]$version_downloaded_double = [string]$version_downloaded
+
+    $install_or_not = 2
+    if ($version_downloaded_double -gt $version_present_double) {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.checkpobierakversion00 " $version_downloaded_double" -ForegroundColor Green
+        Write-Host ""
+        Start-Sleep -Seconds 1
+
+        if (($language -eq "pl-PL") -or ($language -eq "Polski")) {
+            $text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "pl-PL"
+        } else {
+            $text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US"
+        }
+        ($text_msg_upd.news00 -split ";") | ForEach-Object { Write-Host $_ -ForegroundColor Green }
+
+        do {
+            Write-Host ""
+            Start-Sleep -Seconds 1
+            Write-Host $text_msg.checkpobierakversion01 -ForegroundColor Green
+            Write-Host $text_msg.checkpobierakversion02 -ForegroundColor Green
+            $install_or_not = Read-Host
+            [int]$install_or_not = $install_or_not
+        } while ($install_or_not -ne 1 -and $install_or_not -ne 2)
+    } else {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.checkpobierakversion03 -ForegroundColor Red
+        Write-Host ($text_msg.checkpobierakversion04 + " $version_present") -ForegroundColor Red
+        Remove-Item $path_to_temp -Force -Recurse
+        Write-Host ""
+        Start-Sleep -Seconds 3
+        return 2
+    }
+
+    if ($install_or_not -eq 1) {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.checkpobierakversionupd01
+
+        if ($process_bak_id) {
+            Copy-Item -Path "$recources_main_dir\pobierak_bak.ps1" "$recources_main_dir\pobierak_primary.ps1" -Force
+        }
+
+        $path_2_pob_pri = "$recources_main_dir\pobierak_primary.ps1"
+        if (Test-Path $path_2_pob_pri) {
+            if (-not $process_bak_id -and -not $process_bak_primary_id) {
+                Remove-Item "$recources_main_dir\pobierak_primary.ps1" -Force
             }
-        else
-            {
-                Remove-Item $path_to_temp -Force -Recurse
-                New-Item -ItemType Directory -Path $path_to_temp
-            }
-		#CURL POBIERAK FROM GITHUB REPO
-        curl -o $path_to_temp\pobierak.zip https://github.com/pagend0s/pobierak4windows/archive/refs/heads/main.zip
-		#EXTRACT DOWNLOADED ZIP WITH POBIERAK INTO ./RESOURCES/TEMP/..
-        Get-ChildItem $path_to_temp\pobierak.zip -Filter *.zip | Expand-Archive -DestinationPath $path_to_temp\pobierak\ -Force
-		#GET PRESENT VERSION OF POBIERAK
-        $pobierak_v_present = Get-ChildItem $recources_main_dir\pobierak.ps1 | Select-String "pobierak_v" | Select-Object -First 1 
-		#GET DOWNLOADED AND EXTRACTED VERSION OF POBIERAK
-        $version_v_downloaded = Get-ChildItem $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 | Select-String "pobierak_v" | Select-Object -First 1 
-		#CHANGE VERSION NUMBER FROM STRING TO DOUBLE VAR
-        $version_present = $pobierak_v_present.Line.Split('=')[1] -replace '"','' -replace ' ',''
-        [double]$version_present_double = [string]$version_present
-		#CHANGE VERSION NUMBER FROM STRING TO DOUBLE VAR
-        $pobierak_downloaded = $version_v_downloaded.Line.Split('=')[1] -replace '"','' -replace ' ',''
-        [double]$pobierak_downloaded_double = [string]$pobierak_downloaded
+        }
 
-		if ( $pobierak_downloaded_double -gt $version_present_double  )
-			{
-				Write-Host ""
-				SLEEP 1
-				write-host $text_msg.checkpobierakversion00 " $pobierak_downloaded_double"  -ForegroundColor green
-				Write-Host ""
-				SLEEP 1
-				write-host $text_msg.checkpobierakversion10`n -ForegroundColor green
-				if (( $language -eq "pl-PL" ) -or ( $language -eq "Polski"))
-					{
-						$text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "pl-PL" ;
-					}
-				else
-					{
-						$text_msg_upd   = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US" ;
-					}
-				
-				$text_msg_upd.news00 -Split ";" | write-host  -ForegroundColor green	
-				do
-					{
-						Write-Host ""
-						SLEEP 1
-						[int]$instal_or_not = ($(Write-Host $text_msg.checkpobierakversion01`n,$text_msg.checkpobierakversion02`n -ForegroundColor green ; Read-Host))
-					}while(([int]$instal_or_not -ne 1  ) -and ([int]$instal_or_not -ne 2))
-			}
-		else
-			{	#PRESENT VER OF POBIERAK
-				Write-Host ""
-				SLEEP 1
-				write-host $text_msg.checkpobierakversion03`n,$text_msg.checkpobierakversion04 "$version_present" -ForegroundColor red
-				Remove-Item $path_to_temp -Force -Recurse
-				Write-Host ""                 
-				SLEEP 3
-				if ( $selection_update -eq 1 )
-					{
-						main_menu
-					}
-			}
-			
-        if ( $instal_or_not -eq 1 )
-            {
-				
-				Write-Host ""
-				SLEEP 1
-				Write-Host $text_msg.checkpobierakversionupd01
-				
-				#IF ARE PROBLEMS WITH THE OLD VERSION THEN COPIE pobierak_bak.ps1 AND RENAME TO pobierak_primary.ps1
-                if ( $process_bak_id -ne $null )
-                    {
-                        Copy-Item  -Path $recources_main_dir\pobierak_bak.ps1 $recources_main_dir\pobierak_primary.ps1
-                    }
-				
-				$path_2_pob_pri = "$recources_main_dir\pobierak_primary.ps1"
-				If (Test-Path $path_2_pob_pri)
-					{	#IF NO ERROR WITH THE SCRIPT THEN REMOVE OLD pobierak_primary.ps1
-						if (( $process_bak_id -eq $null -and $process_bak_primary_id -eq $null ))
-							{
-								Remove-Item $recources_main_dir\pobierak_primary.ps1 -Force 
-							}
-					}         
-                Copy-Item  	-Path $recources_main_dir\pobierak.ps1 $recources_main_dir\pobierak_bak.ps1	#FOR BACKUP PURPOSES pobierak.ps1 IS COPIED AND RENAMED TO pobierak_bak.ps1 
-                Copy-Item  	-Path $path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1 $recources_main_dir\pobierak.ps1	#COPY NEW VERSION OF POBIERAK TO MAIN DIR
-                Copy-Item	-Path $path_to_temp\pobierak\pobierak4windows-main\*	$pobierakbat_main_dir\ -Recurse -ErrorAction SilentlyContinue
-				
-				
-				Write-Host ""
-				SLEEP 1
-				Write-Host $text_msg.checkpobierakversionupd02
-				Remove-Item $path_to_temp -Force -Recurse #REMOVE TEMP WITH DOWNLOADED POBIERAK AFTER COPY TO MAIN DIR
-				
-				if (($selection_update -eq 1) -and ($instal_or_not -eq 1))
-					{
-						Write-Host ""
-						SLEEP 1
-						Write-Host $text_msg.checkpobierakversionupd03
-						Write-Host ""
-						SLEEP 5
-						Exit(3)
-					}			
-			}
-        else
-            {
-                #PRESENT VER OF POBIERAK
-				Write-Host ""
-				SLEEP 1
-				write-host $text_msg.checkpobierakversion03`n,$text_msg.checkpobierakversion04 "$version_present" -ForegroundColor red
-				Remove-Item $path_to_temp -Force -Recurse
-				Write-Host ""                 
-				SLEEP 3
-				if ( $selection_update -eq 1 )
-					{
-						main_menu
-					}
-            }
-		return $instal_or_not
+        Copy-Item -Path "$recources_main_dir\pobierak.ps1" "$recources_main_dir\pobierak_bak.ps1" -Force
+        Copy-Item -Path "$path_to_temp\pobierak\pobierak4windows-main\resources\pobierak.ps1" "$recources_main_dir\pobierak.ps1" -Force
+        Copy-Item -Path "$path_to_temp\pobierak\pobierak4windows-main\*" "$pobierakbat_main_dir\" -Recurse -Force -ErrorAction SilentlyContinue
+
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.checkpobierakversionupd02
+        Remove-Item $path_to_temp -Force -Recurse
+
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.checkpobierakversionupd03
+        Write-Host ""
+        Start-Sleep -Seconds 5
+        Exit 3
+    } else {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.checkpobierakversion03 -ForegroundColor Red
+        Write-Host ($text_msg.checkpobierakversion04 + " $version_present") -ForegroundColor Red
+        Remove-Item $path_to_temp -Force -Recurse
+        Write-Host ""
+        Start-Sleep -Seconds 3
     }
-	###############################
-	#2 DOWNLOAD FFMPEG LIBRARY# 2 #
-	###############################
-    Function download_ffmpeg(){
-        #https://github.com/GyanD/codexffmpeg/releases
-
-        $test_ffmpef_if_exist = "$recources_main_dir\ffmpeg"
-            if (Test-Path $test_ffmpef_if_exist) 
-                {
-                    Remove-Item $test_ffmpef_if_exist -Force -Recurse #REMOVE OLD FFMPEG DIR RECURS
-                }
-			Write-Host ""
-			SLEEP 1
-			Write-Host $text_msg.ffmpgupd00
-		
-		#DONWLOAD NEW FFMPEG REPO FROM GITHUB GyanD TO ffmpeg.zip
-		
-        Start-BitsTransfer -Source "https://github.com/GyanD/codexffmpeg/releases/download/7.1/ffmpeg-7.1-essentials_build.zip" -Destination "$recources_main_dir\ffmpeg.zip"
-		
-		SLEEP 1
-		Write-Host ""
-		Write-Host $text_msg.ffmpgupd01,$text_msg.ffmpgupd02 -ForegroundColor green
-		Write-Host ""
-		SLEEP 1
-			
-		#FIND ZIP WITH FFMPEG IN MAIN DIR AND EXPAND ARCHIVE TO MAIN DIR\ffmpeg
-		Expand-Archive -Path "$recources_main_dir\ffmpeg.zip" -DestinationPath $recources_main_dir\ffmpeg -Force
-		#DELETE DOWNLOADED ZIP WITH FFMPEG AFTER EXTRACTION
-        Get-ChildItem $recources_main_dir -Filter *.zip | Remove-Item
-		#SET EXTRACTED DIR
-        $recources_main_dir_unzipped = "$recources_main_dir\ffmpeg"	
-		#FIND EXTRACTED FOLDER NAME AND COPY IT TO MAIN DIR"
-        $unzipped_dir = get-ChildItem -Path $recources_main_dir_unzipped -Recurse -Directory -Force -ErrorAction SilentlyContinue | Select-Object -First 1 | Rename-Item -NewName ffmpeg
-		Write-Host $text_msg.ffmpgupd03`n,$text_msg.ffmpgupd04 -ForegroundColor green
-
-    }
-	#######################
-	#3 DOWNLOAD YT-DLP# 3 #
-	#######################
-    Function download_yt_dlp(){
-		#https://github.com/yt-dlp/yt-dlp
-		Write-Host ""
-		SLEEP 1
-		Write-Host $text_msg.ytdlpupd00 -ForegroundColor green
-		Start-BitsTransfer -Source "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -Destination "$recources_main_dir\yt-dlp.exe" #DOWNLOAD YT-DPL
-		Write-Host $text_msg.ytdlpupd01 -ForegroundColor green
-			
-    }
-	########################
-	#4 ALL IN ONE OPTION#4 #
-	########################
-    Function download_all_at_once(){
-        $instal_or_not = check_pobierak_version
-        download_ffmpeg
-        download_yt_dlp		
-		if ( $instal_or_not -eq 1 )
-			{	
-				Write-Host ""
-				$text_msg.allinone00
-				SLEEP 1
-				$text_msg.checkpobierakversionupd03
-				Write-Host ""
-				SLEEP 5
-				Exit(3)		
-			}
-		else
-			{
-				$text_msg.allinone00
-				SLEEP 3
-				main_menu					
-			}
-    }
-	##############################
-	#5 RESTOR PREVIUSE VERSION#5 #
-	##############################
-	Function previous_version(){
-		do
-			{
-				Write-Host ""
-				SLEEP 1
-				[int]$previous_version = ($(Write-Host $text_msg.previousversion00 -ForegroundColor Yellow)) + ($(Write-Host $text_msg.checkpobierakversion02 -ForegroundColor yellow -NoNewLine ; Read-Host))
-					}while(($previous_version -ne 1  ) -and ($previous_version -ne 2))
-				if ( $previous_version -eq 1 )
-					{
-						sleep 1
-						write-host ""
-						write-host $text_msg.previousversion01 -ForegroundColor green
-						sleep 1
-						write-host ""
-						Copy-Item  -Path $recources_main_dir\pobierak_bak.ps1 $recources_main_dir\pobierak.ps1
-						sleep 1
-						write-host ""
-						write-host $text_msg.previousversion02 -ForegroundColor green
-						sleep 1
-						write-host ""
-						Start-Process $pobierakbat_main_dir\pobierak.bat
-						sleep 1
-                        			EXIT 0
-					}
-				if ( $previous_version -eq 2 )
-					{
-						write-host $text_msg.previousversion03 -ForegroundColor red
-                        SLEEP 3
-                        main_menu
-					}
-			
-	}
-
-#############################
-######## UPDATE MENU ########
-#############################
-    function Show_updates_Menu(){
-		Clear-Host
-		Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), $text_msg.updmenu00 ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
-		if ($missing_exe -gt 0)
-		{		
-			$ULine = $UnderlineChar * ($text_msg.optionwithoutexe2.Length + $text_msg.optionwithoutexe3.Length)			
-			Write-Host -Object $ULine -ForegroundColor Red
-			write-host $text_msg.optionwithoutexe2`n,$text_msg.optionwithoutexe3  -ForegroundColor Red
-			Write-Host -Object $ULine -ForegroundColor Red
-		}
-		Write-Host ""
-		Write-Host $text_msg.updmenu01 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host $text_msg.updmenu02 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host $text_msg.updmenu03 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host $text_msg.updmenu04 -ForegroundColor Yellow
-		Write-Host ""
-		Write-Host $text_msg.updmenu05 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host $text_msg.updmenu06 -ForegroundColor White
-	}
-	do
-		{
-			Show_updates_Menu
-			SLEEP 1
-			write-host ""
-			Do
-				{
-					[int]$selection_update = ($(Write-Host $text_msg.updmenu07 -ForegroundColor green)) + ($(Write-Host $text_msg.updmenu08 -ForegroundColor yellow -NoNewLine ; Read-Host))
-				}until(($selection_update -lt 7  ) -and ($selection_update -gt 0))
-
-			switch ($selection_update)
-				{
-					'1' {	check_pobierak_version	} 
-					'2' {	download_ffmpeg	} 
-					'3' {	download_yt_dlp	}
-					'4' {	download_all_at_once	}
-					'5' {	previous_version	}
-					'6' {	main_menu	}
-				}
-			pause
-		}until (( [int]$selection_update -ne 6 ) -and ( [int]$selection_update -gt 0 ))
-	
+    return $install_or_not
 }
-###########################
-######## YT-DL DEV ########
-###########################
-function youtube_dlp_dev(){
-cls
-write-host	$text_msg.ytdlpdevintro01`n,$song_count $text_msg.ytdlpdevintro02`n,$text_msg.ytdlpdevintro03 -ForegroundColor yellow			
-	do
-		{
-			write-host ""
-			SLEEP 1
-			[string]$arguments = ($(Write-Host $text_msg.ytdlpdev00 -ForegroundColor green -NoNewLine)) + ($(Write-Host $text_msg.ytdlpdev01 -ForegroundColor RED ; Read-Host))
-				Start-Process -NoNewWindow -Wait -FilePath $yt_dlp -ArgumentList """$arguments"""
-		}until($arguments -eq "quit")
-		Write-Host $text_msg.ytdlpdev02 -ForegroundColor green
-}
-###########################
-######## MAIN MENU ########
-###########################
-function main_menu(){
 
-	function Show-Menu(){
-		Clear-Host
-		Write-Host ("{0}{1}" -f (' ' * (([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2)))), $text_msg.mainmenu00 ) -ForegroundColor Green -NoNewline; Write-Host "$pobierak_v" -ForegroundColor yellow
-		write-host ""
-		internal_info
-		play_sound
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu01 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu02 -ForegroundColor Yellow
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu03 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu04 -ForegroundColor Yellow
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu05 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu06 -ForegroundColor Yellow
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu07 -ForegroundColor Magenta
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu08 -ForegroundColor Red
-		Write-Host ""
-		Write-Host "	"$text_msg.mainmenu09 -ForegroundColor White
+# --- Function: download_ffmpeg ---
+# Purpose: Download a prebuilt ffmpeg ZIP, extract to resources\ffmpeg, clean up ZIP.
+function download_ffmpeg {
+	param (
+        [int]$daao
+    )
+    # Target directories
+    $ffRoot    = Join-Path $recources_main_dir 'ffmpeg'           	# ...\ffmpeg
+    $finalDest = Join-Path $ffRoot 'ffmpeg'                        	# ...\ffmpeg\ffmpeg
+    $zipPath   = Join-Path $ffRoot 'ffmpeg.zip'                    	# Download ZIP to ...\ffmpeg\ffmpeg.zip
+    $tempExtract = Join-Path $ffRoot '__tmp_extract'               	# Temporary extraction directory
+
+    # Clean up previous installations
+    if (Test-Path -LiteralPath $ffRoot) { 
+        Remove-Item -LiteralPath $ffRoot -Recurse -Force 
+    }
+
+    Write-Host ""
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.ffmpgupd00
+
+    # Prepare destination directories
+    New-Item -ItemType Directory -Force -Path $ffRoot     | Out-Null
+    New-Item -ItemType Directory -Force -Path $finalDest  | Out-Null
+
+    # Download ZIP (BITS) to ...\ffmpeg\ffmpeg.zip
+    try {
+        Start-BitsTransfer `
+            -Source "https://github.com/GyanD/codexffmpeg/releases/download/8.0/ffmpeg-8.0-essentials_build.zip" `
+            -Destination $zipPath
+    } catch {
+        Write-Host "Error downloading FFmpeg. Check your network/URL." -ForegroundColor Red
+        return
+    }
+
+    Start-Sleep -Seconds 1
+    Write-Host ""
+    # Keep your two-message format
+    Write-Host $text_msg.ffmpgupd01, $text_msg.ffmpgupd02 -ForegroundColor Green
+    Write-Host ""
+    Start-Sleep -Seconds 1
+
+    try {
+        # Clean destination directory (contents only)
+        Get-ChildItem -LiteralPath $finalDest -Force -ErrorAction SilentlyContinue | Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
+
+        # Temporary directory
+        if (Test-Path -LiteralPath $tempExtract) {
+            Remove-Item -LiteralPath $tempExtract -Recurse -Force
+        }
+        New-Item -ItemType Directory -Force -Path $tempExtract | Out-Null
+        # Extract ZIP to temporary directory
+        Expand-Archive -Path $zipPath -DestinationPath $tempExtract -Force
+
+        # Determine root to move:
+        #  - if there is exactly one directory and no files at the top level in temp, flatten it (skip that directory),
+        #  - otherwise move everything from tempExtract.
+        $topDirs = Get-ChildItem -LiteralPath $tempExtract -Force | Where-Object { $_.PSIsContainer }
+        $topFilesCount = (Get-ChildItem -LiteralPath $tempExtract -File -Force | Measure-Object).Count
+
+        if ($topDirs.Count -eq 1 -and $topFilesCount -eq 0) {
+            $innerRoot = $topDirs[0].FullName
+        } else {
+            $innerRoot = $tempExtract
+        }
+
+        # Move contents (without the first/top folder) to ...\ffmpeg\ffmpeg
+        Get-ChildItem -LiteralPath $innerRoot -Force | ForEach-Object {
+            Move-Item -LiteralPath $_.FullName -Destination $finalDest -Force
+        }
+
+        # Cleanup temporary files/folders
+        if (Test-Path -LiteralPath $tempExtract) {
+            Remove-Item -LiteralPath $tempExtract -Recurse -Force -ErrorAction SilentlyContinue
+        }
+
+        # Remove only this one ZIP (not all *.zip!)
+        if (Test-Path -LiteralPath $zipPath) {
+            Remove-Item -LiteralPath $zipPath -Force -ErrorAction SilentlyContinue
+        }
+
+        # Quick verification
+        $ffmpegExe = Join-Path $finalDest 'bin\ffmpeg.exe'
+        if (Test-Path -LiteralPath $ffmpegExe) {
+            Write-Host "FFmpeg installed: $finalDest" -ForegroundColor Green
+        } else {
+            Write-Warning "Warning: $ffmpegExe not found. Contents have been moved to: $finalDest (archive structure might have been different)."
+        }
+
+        # Final message (with newline)
+        Write-Host "$($text_msg.ffmpgupd03)`n$($text_msg.ffmpgupd04)" -ForegroundColor Green
+    }
+    catch {
+        Write-Host " Error during FFmpeg installation/extraction: $($_.Exception.Message)" -ForegroundColor Red
+        # Attempt to clean up temporary files/folders
+        if (Test-Path -LiteralPath $tempExtract) {
+            Remove-Item -LiteralPath $tempExtract -Recurse -Force -ErrorAction SilentlyContinue
+        }
+        return
+    }
+	if ($daao -ne 1){
+		Start-Sleep -Seconds 3
+		Exit 3
 	}
-
-	do
-		{
-			Show-Menu
-			SLEEP 1
-			write-host ""
-			Do
-				{
-					[int]$selection = $null
-					[int]$selection = ($(Write-Host $text_msg.mainmenu10 -ForegroundColor green)) + ($(Write-Host $text_msg.mainmenu11 -ForegroundColor yellow -NoNewLine ; Read-Host))
-				}until(($selection -lt 11  ) -and ($selection -gt 0))
-
-			switch ($selection)
-				{
-					'1' {	download_song	} 
-					'2' {	download_from_list	} 
-					'3' {	download_playlist	}
-					'4' {	download_channel	}
-					'5' {	download_movie_and_or_music_from_list	}
-					'6' {	download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL	}
-					'7' {	download_from_cookie	}
-					'8' {	updates_menu	}
-					'9' {	youtube_dlp_dev	}
-					'10'{	[Environment]::Exit(0)	}
-						
-				}
-		pause
-		}until (( [int]$selection -ne 10 ) -and ( [int]$selection -gt 0 ))
 }
-#ENTER TO THE MAIN MENU
-do
-    {
-    main_menu
-    }while([int]$selection -ne 10 )
+
+# --- Function: download_yt_dlp ---
+# Purpose: Download latest yt-dlp.exe into resources.
+function download_yt_dlp {
+	param (
+        [int]$daao
+    )
+
+    Write-Host ""
+    Start-Sleep -Seconds 1
+    Write-Host $text_msg.ytdlpupd00 -ForegroundColor Green
+    Start-BitsTransfer -Source "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -Destination "$recources_main_dir\yt-dlp.exe" #DOWNLOAD YT-DPL
+    Write-Host $text_msg.ytdlpupd01 -ForegroundColor Green
+	if ($daao -ne 1) {
+		Start-Sleep -Seconds 3
+		Exit 3
+	}
+}
+
+# --- Function: download_all_at_once ---
+# Purpose: Run version check, download ffmpeg and yt-dlp, then request restart (rc=3).
+function download_all_at_once {
+	$down_all_at_one = 1
+    $install_or_not = check_pobierak_version
+    download_ffmpeg -daao $down_all_at_one
+    download_yt_dlp -daao $down_all_at_one
+    Write-Host ""
+    $text_msg.allinone00 | Out-Host
+    Start-Sleep -Seconds 1
+    $text_msg.checkpobierakversionupd03 | Out-Host
+    Write-Host ""
+    Start-Sleep -Seconds 5
+    Exit 3
+}
+
+# --- Function: previous_version ---
+# Purpose: Restore previous pobierak.ps1 from backup if the user chooses so.
+function previous_version {
+    do {
+        Write-Host ""
+        Start-Sleep -Seconds 1
+        Write-Host $text_msg.previousversion00 -ForegroundColor Yellow
+        $prev = Read-Host -Prompt $text_msg.checkpobierakversion02
+        [int]$prev = $prev
+    } while ($prev -ne 1 -and $prev -ne 2)
+
+    if ($prev -eq 1) {
+        Start-Sleep -Seconds 1
+        Write-Host ""
+        Write-Host $text_msg.previousversion01 -ForegroundColor Green
+        Start-Sleep -Seconds 1
+        Write-Host ""
+        Copy-Item -Path "$recources_main_dir\pobierak_bak.ps1" "$recources_main_dir\pobierak.ps1" -Force
+        Start-Sleep -Seconds 1
+        Write-Host ""
+        Write-Host $text_msg.previousversion02 -ForegroundColor Green
+        Start-Sleep -Seconds 1
+        Write-Host ""
+        Start-Process "$pobierakbat_main_dir\pobierak.bat" | Out-Null
+        Start-Sleep -Seconds 1
+        Exit 0
+    } else {
+        Write-Host $text_msg.previousversion03 -ForegroundColor Red
+        Start-Sleep -Seconds 3
+        main_menu
+    }
+}
+
+# --- Function: Show_updates_Menu ---
+# Purpose: Render the updates menu banner and contextual warnings.
+function Show_updates_Menu {
+    Clear-Host
+    Write-Host ("{0}{1}" -f (' ' * ([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2))), $text_msg.updmenu00) -ForegroundColor Green -NoNewline
+    Write-Host "$pobierak_v" -ForegroundColor Yellow
+
+    if ($missing_exe -gt 0) {
+        $ULine = $UnderlineChar * ($text_msg.optionwithoutexe2.Length + $text_msg.optionwithoutexe3.Length)
+        Write-Host $ULine -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe2 -ForegroundColor Red
+        Write-Host $text_msg.optionwithoutexe3 -ForegroundColor Red
+        Write-Host $ULine -ForegroundColor Red
+    }
+
+    Write-Host ""
+    Write-Host $text_msg.updmenu01 -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host $text_msg.updmenu02 -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host $text_msg.updmenu03 -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host $text_msg.updmenu04 -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host $text_msg.updmenu05 -ForegroundColor Magenta
+    Write-Host ""
+    Write-Host $text_msg.updmenu06 -ForegroundColor White
+}
+
+# --- Function: updates_menu ---
+# Purpose: Updates submenu loop handling actions 1..6.
+function updates_menu {
+    do {
+        Show_updates_Menu
+        Start-Sleep -Seconds 1
+        Write-Host ""
+        do {
+            Write-Host $text_msg.updmenu07 -ForegroundColor Green
+            $selection_update = Read-Host -Prompt $text_msg.updmenu08
+            [int]$selection_update = $selection_update
+        } until ($selection_update -gt 0 -and $selection_update -lt 7)
+
+        switch ($selection_update) {
+            1 { check_pobierak_version | Out-Null }
+            2 { download_ffmpeg }
+            3 { download_yt_dlp }
+            4 { download_all_at_once }
+            5 { previous_version }
+            6 { main_menu; return }
+        }
+        Pause
+    } until ($selection_update -ne 6 -and $selection_update -gt 0)
+}
+
+# ------------------------------------------------------------------------------
+# --- Function: Split-CommandLine ---
+# Purpose: Windows-native command line splitter using CommandLineToArgvW.
+# Params: [string] Line - raw command line.
+# Returns: [string[]] argv-compatible array.
+function Split-CommandLine {
+    param([Parameter(Mandatory)][string]$Line)
+
+    # Windows-native split (zachowuje cudzysłowy i spacje jak w argv)
+    $count = 0
+    $ptr = [Win32.Native]::CommandLineToArgvW($Line, [ref]$count)
+    if ($ptr -eq [IntPtr]::Zero) { return @() }
+
+    try {
+        $result = New-Object string[] $count
+        for ($i=0; $i -lt $count; $i++) {
+            $argPtr = [System.Runtime.InteropServices.Marshal]::ReadIntPtr($ptr, $i * [IntPtr]::Size)
+            $result[$i] = [System.Runtime.InteropServices.Marshal]::PtrToStringUni($argPtr)
+        }
+        return $result
+    } finally {
+        [void][Win32.Native]::LocalFree($ptr)
+    }
+}
+
+# --- Dev mode for yt-dlp -------------------------------------------------------
+# --- Function: youtube_dlp_dev ---
+# Purpose: A small REPL to run yt-dlp with arbitrary arguments; supports help/quit shortcuts.
+function youtube_dlp_dev {
+    Clear-Host
+    Write-Host $text_msg.ytdlpdevintro01 -ForegroundColor Yellow
+    Write-Host $text_msg.ytdlpdevintro02 -ForegroundColor Yellow
+    Write-Host $text_msg.ytdlpdevintro03 -ForegroundColor Yellow
+
+    while ($true) {
+        Write-Host ""
+        Start-Sleep -Milliseconds 200
+
+        $line = Read-Host -Prompt $text_msg.ytdlpdev01
+        if ([string]::IsNullOrWhiteSpace($line)) { continue }
+
+        # Helper commands
+        if ($line -match '^(quit|exit)$') { break }
+        if ($line -match '^(help|--help)$') { & $yt_dlp --help; continue }
+
+        # Split into argv
+        $args = Split-CommandLine -Line $line
+        if (-not $args -or $args.Count -eq 0) { continue }
+
+        # If the user typed 'yt-dlp' or an executable path at the beginning – remove it
+        $firstLeaf = (Split-Path $args[0] -Leaf)
+        if ($firstLeaf -match '^yt-dlp(\.exe)?$') {
+            if ($args.Count -gt 1) { $args = $args[1..($args.Count-1)] } else { $args = @() }
+        }
+
+        try {
+            # Run in the same console to see stdout/stderr
+            & $yt_dlp @args
+        }
+        catch {
+            Write-Host "yt-dlp failed: $($_.Exception.Message)" -ForegroundColor Red
+        }
+    }
+
+    Write-Host $text_msg.ytdlpdev02 -ForegroundColor Green
+}
+
+
+# ------------------------------------------------------------------------------
+# MAIN MENU
+# --- Function: main_menu ---
+# Purpose: Main application loop displaying menu and dispatching choices.
+function main_menu {
+    function Show-Menu {
+        Clear-Host
+        Write-Host ("{0}{1}" -f (' ' * ([Math]::Max(0, $Host.UI.RawUI.BufferSize.Width / 2) - [Math]::Floor($Null.Length / 2))), $text_msg.mainmenu00) -ForegroundColor Green -NoNewline
+        Write-Host "$pobierak_v" -ForegroundColor Yellow
+        Write-Host ""
+        internal_info 0
+        play_sound
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu01)" -ForegroundColor Magenta
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu02)" -ForegroundColor Yellow
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu03)" -ForegroundColor Magenta
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu04)" -ForegroundColor Yellow
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu05)" -ForegroundColor Magenta
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu06)" -ForegroundColor Yellow
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu07)" -ForegroundColor Magenta
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu08)" -ForegroundColor Red
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu09)" -ForegroundColor White
+    }
+
+    do {
+        Show-Menu
+        Start-Sleep -Seconds 1
+        Write-Host ""
+        do {
+            Write-Host $text_msg.mainmenu10 -ForegroundColor Green
+            $selection = Read-Host -Prompt $text_msg.mainmenu11
+            [int]$selection = $selection
+        } until ($selection -gt 0 -and $selection -lt 11)
+
+        switch ($selection) {
+            1 { download_song }
+            2 { download_from_list }
+            3 { download_playlist }
+            4 { download_channel }
+            5 { download_movie_and_or_music_from_list }
+            6 { download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL }
+            7 { download_from_cookie }
+            8 { updates_menu }
+            9 { youtube_dlp_dev }
+            10 { [Environment]::Exit(0) }
+        }
+        Pause
+    } until ($selection -eq 10)
+}
+
+# ------------------------------------------------------------------------------
+# Start
+main_menu
