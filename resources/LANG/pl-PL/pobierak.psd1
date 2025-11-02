@@ -131,7 +131,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.483  ; Dostosowanie wyboru folderow do win 11 ; Usunieto problem ze sprawdzania wersji ytdlp
+	news00 = 3.490 ; Poprawiona czytelność kodu i dodanie komentarzy ; Okno wyboru folderu ustawione na wierzchu w Windows 11 ; Bezpieczne przekazywanie argumentów dla yt-dlp ; Ulepszona normalizacja linków przy użyciu Normalize-YouTubeLink ; Naprawione liczenie linii i filtrowanie plików wejściowych ; Uproszczone i bardziej niezawodne pobieranie PID procesu ; Zamknięte cudzysłowy w download_from_cookie + dodano wariant Windows (--cookies-from-browser firefox/chrome/edge) ; Dodano hardcoded link do FFMPEG 8.0 ; Usunięto problematyczny checker wersji yt-dlp
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPISZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
