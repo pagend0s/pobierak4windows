@@ -1,7 +1,7 @@
 # =======================
 # POBIERAK (PowerShell) – revised version with AI
 # Version:
-$pobierak_v = "3.53"
+$pobierak_v = "3.531"
 # =======================
 # --- Runtime configuration & important paths ---
 # $recources_main_dir: absolute path to resources folder (script directory).
@@ -1335,18 +1335,56 @@ function check_pobierak_version {
 	} else {
 		$text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US"
 	}
-
-        
+	
 	Write-Host $text_msg_upd.checkpobierakversion10 -ForegroundColor Green
 
-	$text_msg_upd.GetEnumerator() |
-    Where-Object { $_.Key -match '^news\d+$' } |
-    Sort-Object Key |
-    ForEach-Object {
-        Write-Host $_.Value -ForegroundColor Green
-    }
-        do {
-            Write-Host ""
+	$updNews = $null
+
+	foreach ($item in @($text_msg_upd)) {
+   		if ($item -is [System.Collections.IDictionary]) {
+
+        	$hasNewsKeys = $item.Keys | Where-Object { $_ -match '^news\d+$' }
+
+        	if ($hasNewsKeys) {
+           		$updNews = $item
+            	break
+        	}
+    	}
+	}
+
+	if ($null -ne $updNews) {
+    	$updNews.Keys |
+        	Where-Object { $_ -match '^news(\d+)$' } |
+        	Sort-Object {
+            	if ($_ -match '^news(\d+)$') {
+                	[int]$matches[1]
+            	} else {
+                	999
+            	}
+        	} |
+        	ForEach-Object {
+            	$newsKey = $_
+
+            	if ($newsKey -match '^news(\d+)$') {
+                	$newsNumber = [int]$matches[1]
+                	$newsValue = [string]$updNews[$newsKey]
+
+                	# Skip news00 if it contains version number
+                	if ($newsNumber -gt 0 -and -not [string]::IsNullOrWhiteSpace($newsValue)) {
+                    	Write-Host "- $newsValue" -ForegroundColor Green
+                	}
+            	}
+        	}
+	}
+	else {
+    	Write-Host "No news entries found in language data." -ForegroundColor Yellow
+	}
+
+	
+
+
+    do {
+        	Write-Host ""
             Start-Sleep -Seconds 1
             Write-Host $text_msg.checkpobierakversion01 -ForegroundColor Green
             Write-Host $text_msg.checkpobierakversion02 -ForegroundColor Green
