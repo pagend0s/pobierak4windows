@@ -1,3 +1,7 @@
+#lang_menu
+ConvertFrom-StringData @'
+	lang_menu0 = Jezyk zostal zmieniony. Menu zostanie odswiezone.
+'@
 #internal_info
 ConvertFrom-StringData @'
 	internalinfo0 = AKTUALNA WERSJA YOUTUBE-DLP:
@@ -181,7 +185,8 @@ ConvertFrom-StringData @'
 	mainmenu06 = 6: SCIAGNIIJ VIDEO I/LUB AUDIO Z PLAYLISTY LUB CHANNEL
 	mainmenu07 = 7: SCIAGNIIJ Z PRYWATNEJ LISTY VIDEO I/LUB AUDIO
 	mainmenu08 = 8: MENU AKTUALIZACJI
-	mainmenu09 = EXIT: ABY WYJSC - 10
-	mainmenu10 = DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI.
-	mainmenu11 = ZATWIERDZ POPRZEZ ENTER:
+	mainmenu09 = 9: Zmień język / Change language
+	mainmenu10 = EXIT: ABY WYJSC - 10
+	mainmenu98 = DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI.
+	mainmenu99 = ZATWIERDZ POPRZEZ ENTER:
 '@
