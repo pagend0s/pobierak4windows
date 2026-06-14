@@ -1,7 +1,7 @@
 # =======================
 # POBIERAK (PowerShell) – revised version with AI
 # Version:
-$pobierak_v = "3.490"
+$pobierak_v = "3.5"
 # =======================
 # --- Runtime configuration & important paths ---
 # $recources_main_dir: absolute path to resources folder (script directory).
@@ -24,29 +24,6 @@ try {
 }
 
 # ------------------------------------------------------------------------------
-# --- Function: Get-Lang ---
-# Purpose: Detect the current UI language using HKCU\Control Panel\Desktop\PreferredUILanguages,
-#          falling back to Get-WinUserLanguageList or Get-Culture. Returns a language tag (e.g., en-US).
-# Returns: [string] language tag.
-function Get-Lang {
-    try {
-        $regkey = "HKCU:\Control Panel\Desktop"
-        $name   = "PreferredUILanguages"
-        $has    = (Get-ItemProperty $regkey).PSObject.Properties.Name -contains $name
-        if (-not $has) {
-            $lang = (Get-WinUserLanguageList)[0].LanguageTag
-        } else {
-            $lang = (Get-ItemProperty 'HKCU:\Control Panel\Desktop' PreferredUILanguages).PreferredUILanguages[0]
-        }
-        if (-not $lang) { $lang = (Get-Culture).Name }
-        return [string]$lang
-    } catch {
-        return "en-US"
-    }
-}
-[string]$language = Get-Lang
-
-# ------------------------------------------------------------------------------
 # User context, paths, tools
 $logged_usr           = ([System.Security.Principal.WindowsIdentity]::GetCurrent().Name).Split('\')[1]
 $recources_main_dir   = Split-Path $PSCommandPath -Parent
@@ -55,12 +32,197 @@ $yt_dlp               = "$recources_main_dir\yt-dlp.exe"
 $ffmpeg               = "$recources_main_dir\ffmpeg\ffmpeg\bin\ffmpeg.exe"   # domyślnie – później weryfikujemy
 
 # ------------------------------------------------------------------------------
-# Localization (messages)
-if (($language -eq "pl-PL") -or ($language -eq "Polski")) {
-    $text_msg = Import-LocalizedData -BaseDirectory "$recources_main_dir\LANG\" -UICulture "pl-PL"
-} else {
-    $text_msg = Import-LocalizedData -BaseDirectory "$recources_main_dir\LANG\" -UICulture "en-US"
+# Configuration / Language
+# Language is NOT detected automatically anymore.
+# It is read only from:
+#   Resources\config.ini
+#
+# Supported values:
+#   Language=pl
+#   Language=en
+
+$config_file = Join-Path $recources_main_dir "config.ini"
+
+function Initialize-Config {
+    if (-not (Test-Path -LiteralPath $config_file)) {
+        @(
+            "# Pobierak configuration"
+            "# Supported languages: pl, en"
+            "Language=pl"
+        ) | Set-Content -Path $config_file -Encoding UTF8
+    }
 }
+
+function Get-ConfigLanguage {
+    Initialize-Config
+
+    try {
+        $cfg = Get-Content -Path $config_file -ErrorAction Stop
+
+        foreach ($line in $cfg) {
+            if ($line -match '^\s*Language\s*=\s*(pl|en)\s*$') {
+                return $matches[1].ToLower()
+            }
+        }
+    } catch {}
+
+    # Safe fallback if config is broken
+    Set-ConfigLanguage -Lang "en" -Silent
+    return "en"
+}
+
+function Set-ConfigLanguage {
+    param(
+        [ValidateSet("pl", "en")]
+        [string]$Lang,
+
+        [switch]$Silent
+    )
+
+    Initialize-Config
+
+    $content = Get-Content -Path $config_file -ErrorAction SilentlyContinue
+    $changed = $false
+    $newContent = @()
+
+    foreach ($line in $content) {
+        if ($line -match '^\s*Language\s*=') {
+            $newContent += "Language=$Lang"
+            $changed = $true
+        } else {
+            $newContent += $line
+        }
+    }
+
+    if (-not $changed) {
+        $newContent += "Language=$Lang"
+    }
+
+    $newContent | Set-Content -Path $config_file -Encoding UTF8
+
+    if (-not $Silent) {
+        Write-Host ""
+        Write-Host "Language saved in config.ini: $Lang" -ForegroundColor Green
+        Start-Sleep -Seconds 1
+    }
+}
+
+
+function Import-PobierakLanguage {
+    param(
+        [ValidateSet("pl", "en")]
+        [string]$Lang
+    )
+
+    $langDir = Join-Path $recources_main_dir "LANG"
+
+    try {
+        if ($Lang -eq "pl") {
+            $data = Import-LocalizedData -BaseDirectory $langDir -UICulture "pl-PL" -ErrorAction Stop
+        } else {
+            $data = Import-LocalizedData -BaseDirectory $langDir -UICulture "en-US" -ErrorAction Stop
+        }
+
+        if (-not $data) {
+            throw "Language data is empty."
+        }
+
+        return $data
+    }
+    catch {
+        Write-Host ""
+        Write-Host "ERROR: Cannot load language file." -ForegroundColor Red
+        Write-Host "Language: $Lang" -ForegroundColor Red
+        Write-Host "Directory: $langDir" -ForegroundColor Red
+        Write-Host $_.Exception.Message -ForegroundColor Red
+        Start-Sleep -Seconds 10
+        exit 1
+    }
+}
+
+function Show-LanguageDialog {	
+  $items = @(
+        @{ Code = "pl"; Label = "Polski / Polish" }
+        @{ Code = "en"; Label = "English / Angielski" }
+    )
+
+
+    $current = $script:language
+    $index = 0
+
+    for ($i = 0; $i -lt $items.Count; $i++) {
+        if ($items[$i].Code -eq $current) {
+            $index = $i
+            break
+        }
+    }
+
+    while ($true) {
+        Write-Host ""
+        Write-Host "----------------------------------------------" -ForegroundColor Cyan
+        Write-Host " Select language / Wybierz jezyk" -ForegroundColor Cyan
+        Write-Host "----------------------------------------------" -ForegroundColor Cyan
+
+        for ($i = 0; $i -lt $items.Count; $i++) {
+            if ($i -eq $index) {
+                Write-Host (" > {0}" -f $items[$i].Label) -ForegroundColor Black -BackgroundColor Cyan
+            } else {
+                Write-Host ("   {0}" -f $items[$i].Label) -ForegroundColor White
+            }
+        }
+
+        Write-Host "----------------------------------------------" -ForegroundColor Cyan
+        Write-Host " Up/Down - move | Enter - OK | Esc - cancel" -ForegroundColor Cyan
+        Write-Host "----------------------------------------------" -ForegroundColor Cyan
+        Write-Host ""
+
+        $key = $Host.UI.RawUI.ReadKey("NoEcho,IncludeKeyDown")
+
+        switch ($key.VirtualKeyCode) {
+            38 {
+                if ($index -gt 0) {
+                    $index--
+                } else {
+                    $index = $items.Count - 1
+                }
+            }
+            40 {
+                if ($index -lt ($items.Count - 1)) {
+                    $index++
+                } else {
+                    $index = 0
+                }
+            }
+            13 {
+                return $items[$index].Code
+            }
+            27 {
+                return $null
+            }
+        }
+    }
+}
+
+function Change-Language {
+    $selectedLang = Show-LanguageDialog
+
+    if ($null -eq $selectedLang) {
+        return
+    }
+
+    Set-ConfigLanguage -Lang $selectedLang
+
+    $script:language = $selectedLang
+    $script:text_msg = Import-PobierakLanguage -Lang $script:language
+
+    
+	Write-Host $text_msg.lang_menu0 -ForegroundColor Green
+  
+    Start-Sleep -Seconds 2
+}
+
+$script:language = Get-ConfigLanguage
+$script:text_msg = Import-PobierakLanguage -Lang $script:language
 
 # ------------------------------------------------------------------------------
 # Sound
@@ -1013,11 +1175,13 @@ function check_pobierak_version {
         Write-Host ""
         Start-Sleep -Seconds 1
 
-        if (($language -eq "pl-PL") -or ($language -eq "Polski")) {
-            $text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "pl-PL"
-        } else {
-            $text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US"
-        }
+       
+	if ($script:language -eq "pl") {
+		$text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "pl-PL"
+	} else {
+		$text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US"
+	}
+
         ($text_msg_upd.news00 -split ";") | ForEach-Object { Write-Host $_ -ForegroundColor Green }
 
         do {
@@ -1406,7 +1570,11 @@ function main_menu {
 		Write-Host ""
 		Write-Host "`t$($text_msg.mainmenu08)" -ForegroundColor Red
 		Write-Host ""
-		Write-Host "`t$($text_msg.mainmenu09)" -ForegroundColor White
+		Write-Host "`t$($text_msg.mainmenu09)" -ForegroundColor White	
+		Write-Host ""
+		Write-Host "`t$($text_msg.mainmenu10)" -ForegroundColor White	
+        
+
     }
 
     do {
@@ -1414,10 +1582,10 @@ function main_menu {
         Start-Sleep -Seconds 1
         Write-Host ""
         do {
-            Write-Host $text_msg.mainmenu10 -ForegroundColor Green
-            $selection = Read-Host -Prompt $text_msg.mainmenu11
+            Write-Host $text_msg.mainmenu98 -ForegroundColor Green
+            $selection = Read-Host -Prompt $text_msg.mainmenu99
             [int]$selection = $selection
-        } until ($selection -gt 0 -and $selection -lt 11)
+        } until ($selection -gt 0 -and $selection -lt 12)
 
         switch ($selection) {
             1 { download_song }
@@ -1428,13 +1596,27 @@ function main_menu {
             6 { download_movie_and_or_music_from_list_PLAYLIST_AND_CHANNEL }
             7 { download_from_cookie }
             8 { updates_menu }
-            9 { youtube_dlp_dev }
+			9 { Change-Language }
             10 { [Environment]::Exit(0) }
+			11 { youtube_dlp_dev }
         }
         Pause
-    } until ($selection -eq 10)
+    } until ($selection -eq 11)
 }
 
 # ------------------------------------------------------------------------------
 # Start
-main_menu
+#main_menu
+
+try {
+    main_menu
+}
+catch {
+    Write-Host ""
+    Write-Host "FATAL ERROR in pobierak.ps1" -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    Write-Host ""
+    Write-Host "ScriptStackTrace:" -ForegroundColor Yellow
+    Write-Host $_.ScriptStackTrace
+    exit 1
+}
