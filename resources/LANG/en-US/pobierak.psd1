@@ -1,3 +1,8 @@
+#lang_menu
+ConvertFrom-StringData @'
+	lang_menu0 = Language has been changed. Menu will be refreshed.
+'@
+
 #internal_info
 ConvertFrom-StringData @'
     internalinfo0 = CURRENT VERSION OF YOUTUBE-DLP:
@@ -181,7 +186,8 @@ ConvertFrom-StringData @'
 	mainmenu06 = 6: DOWNLOAD VIDEO AND / OR AUDIO FROM PLAYLIST OR CHANNEL.
 	mainmenu07 = 7: DOWNLOAD FROM PRIVATE PLAYLIST IN YT PROFILE VIDEO AND / OR AUDIO.
 	mainmenu08 = 8: UPDATES MENU
-	mainmenu09 = EXIT: TO EXIT ENTER - 10
-	mainmenu10 = MAKE YOUR SELECTION BY ENTERING THE RIGHT OPTION NUMBER.
-	mainmenu11 = PRESS ENTER TO CONFIRM:
+	mainmenu09 = 9: Change language
+	mainmenu10 = EXIT: TO EXIT ENTER - 10
+	mainmenu98 = MAKE YOUR SELECTION BY ENTERING THE RIGHT OPTION NUMBER.
+	mainmenu99 = PRESS ENTER TO CONFIRM:
 '@
