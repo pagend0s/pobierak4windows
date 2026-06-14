@@ -136,7 +136,7 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = 3.490 ; Enhanced code readability and comments ; Folder selection window stays on top in Win11 ; Safe argument splatting for yt-dlp ; Improved link normalization using Normalize-YouTubeLink ; Fixed line counting and input file filtering ; Simplified and robust PID retrieval ; Closed quotes in download_from_cookie + added Windows variant (--cookies-from-browser firefox/chrome/edge) ; Added hardcoded link for FFMPEG 8.0 ; Removed problematic yt-dlp version checker
+	news00 = 3.5 ; Added configurable application language support via resources/config.ini ; Added manual language switch option in the main menu. ; Added support for Polish and English language selection ;  Added improved BAT launcher diagnostics ; Added PowerShell syntax parser validation in the BAT launcher before starting the main script. ; Added improved fatal error reporting with stack trace output
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER A VALID VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
