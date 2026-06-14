@@ -1,3 +1,17 @@
+#yt-dlp-warn_menu
+ConvertFrom-StringData @'
+	warn_ytdlp00 = WARNING: Installed yt-dlp version is older than the latest!
+	warn_ytdlp01 = Installed version : 
+	warn_ytdlp02 = Latest version
+	warn_ytdlp03 = An outdated yt-dlp version may cause Pobierak to stop working
+	warn_ytdlp04 = correctly until yt-dlp is updated.
+	warn_ytdlp05 = 1 - Update yt-dlp now
+	warn_ytdlp06 = 2 - Continue to the menu
+	warn_ytdlp07 = Select option: 
+	warn_ytdlp08 = yt-dlp has been updated. Continuing to the menu...
+
+'@
+
 #lang_menu
 ConvertFrom-StringData @'
 	lang_menu0 = Language has been changed. Menu will be refreshed.
@@ -136,7 +150,20 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = A NEW VERSION OF POBIERAK IS AVAILABLE:
 	checkpobierakversion10 = THE NEWER VERSION INCLUDES THE FOLLOWING CHANGES:
-	news00 = 3.5 ; Added configurable application language support via resources/config.ini ; Added manual language switch option in the main menu. ; Added support for Polish and English language selection ;  Added improved BAT launcher diagnostics ; Added PowerShell syntax parser validation in the BAT launcher before starting the main script. ; Added improved fatal error reporting with stack trace output
+	
+	news00 = 3.53
+	news01 = Added configurable application language support via resources/config.ini 
+	news02 = Added manual language switch option in the main menu. 
+	news03 = Added support for Polish and English language selection
+	news04 = Added improved BAT launcher diagnostics 
+	news05 = Added PowerShell syntax parser validation in the BAT launcher before starting the main script. 
+	news06 = Added improved fatal error reporting with stack trace output
+	news07 = Added yt-dlp version check during application startup.
+	news08 = Added a warning when the installed yt-dlp.exe version is older than the latest version available on GitHub.
+	news09 = Added an option to update yt-dlp.exe immediately before loading the main menu.
+	news10 = Added a safety fallback: if yt-dlp.exe is missing, Pobierak continues to the main menu and shows the existing installation warning.
+	news11 = Added faster yt-dlp version comparison based on the latest GitHub release information instead of downloading the full executable file.
+	
 	checkpobierakversion01 = DO YOU WANT TO UPDATE ?: PRESS 1 = YES .. 2 = NO
 	checkpobierakversion02 = ENTER A VALID VALUE: 1-2:
 	checkpobierakversion03 = THERE IS NO NEWER VERSION OF POBIERAK AT THE MOMENT.
@@ -186,7 +213,7 @@ ConvertFrom-StringData @'
 	mainmenu06 = 6: DOWNLOAD VIDEO AND / OR AUDIO FROM PLAYLIST OR CHANNEL.
 	mainmenu07 = 7: DOWNLOAD FROM PRIVATE PLAYLIST IN YT PROFILE VIDEO AND / OR AUDIO.
 	mainmenu08 = 8: UPDATES MENU
-	mainmenu09 = 9: Change language
+	mainmenu09 = 9: CHANGE LANGUAGE / ZMIEN JEZYK
 	mainmenu10 = EXIT: TO EXIT ENTER - 10
 	mainmenu98 = MAKE YOUR SELECTION BY ENTERING THE RIGHT OPTION NUMBER.
 	mainmenu99 = PRESS ENTER TO CONFIRM:
