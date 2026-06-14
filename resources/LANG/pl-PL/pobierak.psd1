@@ -1,3 +1,17 @@
+#yt-dlp-warn_menu
+ConvertFrom-StringData @'
+    warn_ytdlp00 = UWAGA: Zainstalowana wersja yt-dlp jest starsza niż najnowsza dostępna!
+    warn_ytdlp01 = Zainstalowana wersja : 
+    warn_ytdlp02 = Najnowsza wersja    : 
+    warn_ytdlp03 = Nieaktualna wersja yt-dlp może spowodować, że Pobierak przestanie działać
+    warn_ytdlp04 = poprawnie do czasu zaktualizowania yt-dlp.
+    warn_ytdlp05 = 1 - Zaktualizuj yt-dlp teraz
+    warn_ytdlp06 = 2 - Kontynuuj do menu
+    warn_ytdlp07 = Wybierz opcję: 
+    warn_ytdlp08 = yt-dlp został zaktualizowany. Przechodzę do menu...
+'@
+
+
 #lang_menu
 ConvertFrom-StringData @'
 	lang_menu0 = Jezyk zostal zmieniony. Menu zostanie odswiezone.
@@ -135,7 +149,21 @@ ConvertFrom-StringData @'
 ConvertFrom-StringData @'
 	checkpobierakversion00 = JEST DOSTEPNA NOWA WERSJA pobieraka:
 	checkpobierakversion10 = NOWSZA WERSJA OBEJMUJE NASTEPUJACE ZMIANY:
-	news00 = 3.5 ; Dodano konfigurowalną obsługę języka aplikacji przez resources/config.ini ; Dodano ręczną zmianę języka w menu głównym. ; Dodano obsługę wyboru języka polskiego i angielskiego ; Dodano ulepszoną diagnostykę launchera BAT ; Dodano walidację składni PowerShell w launcherze BAT przed uruchomieniem głównego skryptu. ; Dodano ulepszone raportowanie błędów krytycznych wraz ze śladem stosu
+	
+	news00 = 3.53
+    news01 = Dodano konfigurowalna obsluge jezyka aplikacji przez resources/config.ini
+    news02 = Dodano reczna zmiane jezyka w menu glownym.
+    news03 = Dodano obsluge wyboru jezyka polskiego i angielskiego.
+    news04 = Dodano ulepszona diagnostyke launchera BAT.
+    news05 = Dodano walidacje skladni PowerShell w launcherze BAT przed uruchomieniem glownego skryptu.
+    news06 = Dodano ulepszone raportowanie bledow krytycznych wraz ze sladem stosu.
+	news07 = Dodano sprawdzanie wersji yt-dlp podczas uruchamiania programu.
+	news08 = Dodano ostrzezenie, gdy zainstalowana wersja yt-dlp.exe jest starsza niz najnowsza wersja dostepna na GitHub.
+	news09 = Dodano opcje natychmiastowej aktualizacji yt-dlp.exe przed zaladowaniem menu glownego.
+	news10 = Dodano bezpiecznik: jezeli brakuje pliku yt-dlp.exe, Pobierak kontynuuje uruchamianie do menu glownego i pokazuje istniejace ostrzezenie o potrzebie instalacji.
+	news11 = Dodano szybsze porownywanie wersji yt-dlp na podstawie informacji o najnowszym wydaniu GitHub zamiast pobierania calego pliku wykonywalnego.
+
+
 	checkpobierakversion01 = CZY CHCESZ JA ZAINSTALOWAC ?: WCISNIJ 1 = TAK .. 2 = NIE
 	checkpobierakversion02 = WPISZ NUMER: 1-2
 	checkpobierakversion03 = BRAK NOWEJ WERSJI POBIERAKA
@@ -185,7 +213,7 @@ ConvertFrom-StringData @'
 	mainmenu06 = 6: SCIAGNIIJ VIDEO I/LUB AUDIO Z PLAYLISTY LUB CHANNEL
 	mainmenu07 = 7: SCIAGNIIJ Z PRYWATNEJ LISTY VIDEO I/LUB AUDIO
 	mainmenu08 = 8: MENU AKTUALIZACJI
-	mainmenu09 = 9: Zmień język / Change language
+	mainmenu09 = 9: ZMIEN JEZYK / CHANGE LANGUAGE
 	mainmenu10 = EXIT: ABY WYJSC - 10
 	mainmenu98 = DOKONAJ WYBORU WYBIERAJAC ODPOWIEDNI NUMER OPCJI.
 	mainmenu99 = ZATWIERDZ POPRZEZ ENTER:
