@@ -158,6 +158,7 @@ function Show-LanguageDialog {
     }
 
     while ($true) {
+		clear
         Write-Host ""
         Write-Host "----------------------------------------------" -ForegroundColor Cyan
         Write-Host " Select language / Wybierz jezyk" -ForegroundColor Cyan
