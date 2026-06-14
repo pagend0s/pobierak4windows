@@ -1,7 +1,7 @@
 # =======================
 # POBIERAK (PowerShell) – revised version with AI
 # Version:
-$pobierak_v = "3.5"
+$pobierak_v = "3.53"
 # =======================
 # --- Runtime configuration & important paths ---
 # $recources_main_dir: absolute path to resources folder (script directory).
@@ -224,6 +224,159 @@ function Change-Language {
 
 $script:language = Get-ConfigLanguage
 $script:text_msg = Import-PobierakLanguage -Lang $script:language
+
+#---------------------------------------------------------------------------------------------
+# --- Function: ConvertTo-YtDlpVersionObject ---
+# Purpose: Convert yt-dlp version string like 2025.06.09 to a [version] object for safe comparison.
+function ConvertTo-YtDlpVersionObject {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VersionString
+    )
+
+    $clean = ($VersionString.Trim() -replace '[^\d\.]', '')
+    $parts = $clean.Split('.') | Where-Object { $_ -match '^\d+$' }
+
+    if (-not $parts -or $parts.Count -eq 0) {
+        return $null
+    }
+
+    while ($parts.Count -lt 4) {
+        $parts += "0"
+    }
+
+    if ($parts.Count -gt 4) {
+        $parts = $parts[0..3]
+    }
+
+    try {
+        return [version]($parts -join '.')
+    }
+    catch {
+        return $null
+    }
+}
+
+# --- Function: Get-YtDlpExeVersion ---
+# Purpose: Run yt-dlp.exe --version and return the detected version string.
+function Get-YtDlpExeVersion {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ExePath
+    )
+
+    if (-not (Test-Path -LiteralPath $ExePath)) {
+        return $null
+    }
+
+    try {
+        $ver = & $ExePath --version 2>$null | Select-Object -First 1
+
+        if ([string]::IsNullOrWhiteSpace($ver)) {
+            return $null
+        }
+
+        return $ver.Trim()
+    }
+    catch {
+        return $null
+    }
+}
+
+# --- Function: Get-LatestYtDlpGithubVersion ---
+# Purpose: Get the latest yt-dlp release version from GitHub API without downloading yt-dlp.exe.
+function Get-LatestYtDlpGithubVersion {
+    $apiUrl = "https://api.github.com/repos/yt-dlp/yt-dlp/releases/latest"
+
+    try {
+        # Enable TLS 1.2 for older Windows PowerShell environments.
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+
+        $client = New-Object System.Net.WebClient
+        $client.Headers.Add("User-Agent", "Pobierak-Version-Check")
+        $client.Headers.Add("Accept", "application/vnd.github+json")
+
+        $json = $client.DownloadString($apiUrl)
+
+        if ([string]::IsNullOrWhiteSpace($json)) {
+            return $null
+        }
+
+        $data = $json | ConvertFrom-Json
+
+        if ($null -eq $data -or [string]::IsNullOrWhiteSpace($data.tag_name)) {
+            return $null
+        }
+
+        return ($data.tag_name.Trim() -replace '^v', '')
+    }
+    catch {
+        return $null
+    }
+    finally {
+        if ($client) {
+            $client.Dispose()
+        }
+    }
+}
+
+#####################################################################################################
+# --- Function: ConvertTo-YtDlpVersionObject ---
+# Purpose: Convert yt-dlp version string like 2025.06.09 to a [version] object for safe comparison.
+function ConvertTo-YtDlpVersionObject {
+    param(
+        [Parameter(Mandatory)]
+        [string]$VersionString
+    )
+
+    $clean = ($VersionString.Trim() -replace '[^\d\.]', '')
+    $parts = $clean.Split('.') | Where-Object { $_ -match '^\d+$' }
+
+    if (-not $parts -or $parts.Count -eq 0) {
+        return $null
+    }
+
+    while ($parts.Count -lt 4) {
+        $parts += "0"
+    }
+
+    if ($parts.Count -gt 4) {
+        $parts = $parts[0..3]
+    }
+
+    try {
+        return [version]($parts -join '.')
+    }
+    catch {
+        return $null
+    }
+}
+
+# --- Function: Get-YtDlpExeVersion ---
+# Purpose: Run yt-dlp.exe --version and return the detected version string.
+function Get-YtDlpExeVersion {
+    param(
+        [Parameter(Mandatory)]
+        [string]$ExePath
+    )
+
+    if (-not (Test-Path -LiteralPath $ExePath)) {
+        return $null
+    }
+
+    try {
+        $ver = & $ExePath --version 2>$null | Select-Object -First 1
+
+        if ([string]::IsNullOrWhiteSpace($ver)) {
+            return $null
+        }
+
+        return $ver.Trim()
+    }
+    catch {
+        return $null
+    }
+}
 
 # ------------------------------------------------------------------------------
 # Sound
@@ -1183,8 +1336,15 @@ function check_pobierak_version {
 		$text_msg_upd = Import-LocalizedData -BaseDirectory "$path_to_temp\pobierak\pobierak4windows-main\resources\LANG\" -UICulture "en-US"
 	}
 
-        ($text_msg_upd.news00 -split ";") | ForEach-Object { Write-Host $_ -ForegroundColor Green }
+        
+	Write-Host $text_msg_upd.checkpobierakversion10 -ForegroundColor Green
 
+	$text_msg_upd.GetEnumerator() |
+    Where-Object { $_.Key -match '^news\d+$' } |
+    Sort-Object Key |
+    ForEach-Object {
+        Write-Host $_.Value -ForegroundColor Green
+    }
         do {
             Write-Host ""
             Start-Sleep -Seconds 1
@@ -1370,6 +1530,84 @@ function download_yt_dlp {
 		Exit 3
 	}
 }
+
+##########################################################################################################
+# --- Function: Test-YtDlpStartupVersion ---
+# Purpose:
+#   Run before the main menu is displayed.
+#   If yt-dlp.exe is missing, skip the check and continue to the menu.
+#   If the local yt-dlp.exe is older than the latest GitHub release,
+#   show a warning and allow the user to update now or continue to the menu.
+function Test-YtDlpStartupVersion {
+    $localYtDlp = $yt_dlp
+
+    # Safety switch:
+    # If yt-dlp.exe is missing, do not block startup.
+    # The main menu already shows information about missing required files.
+    if (-not (Test-Path -LiteralPath $localYtDlp)) {
+        return
+    }
+
+    try {
+        $localVersionRaw = Get-YtDlpExeVersion -ExePath $localYtDlp
+        if ([string]::IsNullOrWhiteSpace($localVersionRaw)) {
+            return
+        }
+
+        $latestVersionRaw = Get-LatestYtDlpGithubVersion
+        if ([string]::IsNullOrWhiteSpace($latestVersionRaw)) {
+            return
+        }
+
+        $localVersionObj = ConvertTo-YtDlpVersionObject -VersionString $localVersionRaw
+        $latestVersionObj = ConvertTo-YtDlpVersionObject -VersionString $latestVersionRaw
+
+        if ($null -eq $localVersionObj -or $null -eq $latestVersionObj) {
+            return
+        }
+
+        if ($localVersionObj -lt $latestVersionObj) {
+            Clear-Host
+
+            Write-Host ""
+            Write-Host "------------------------------------------------------------" -ForegroundColor Red
+            Write-Host $text_msg.warn_ytdlp00 -ForegroundColor Red
+            Write-Host "------------------------------------------------------------" -ForegroundColor Red
+            Write-Host ""
+            Write-Host $text_msg.warn_ytdlp01 "$localVersionRaw" -ForegroundColor Yellow
+            Write-Host $text_msg.warn_ytdlp02 "$latestVersionRaw" -ForegroundColor Green
+            Write-Host ""
+            Write-Host $text_msg.warn_ytdlp03 -ForegroundColor Red
+            Write-Host $text_msg.warn_ytdlp04 -ForegroundColor Red
+            Write-Host ""
+            Write-Host $text_msg.warn_ytdlp05 -ForegroundColor Green
+            Write-Host $text_msg.warn_ytdlp06 -ForegroundColor Yellow
+            Write-Host ""
+
+            do {
+                $choiceRaw = Read-Host -Prompt $text_msg.warn_ytdlp07
+                $choice = 0
+                $ok = [int]::TryParse($choiceRaw, [ref]$choice)
+            } until ($ok -and ($choice -eq 1 -or $choice -eq 2))
+
+            if ($choice -eq 1) {
+                # Use the existing update function.
+                # Parameter -daao 1 prevents download_yt_dlp from calling Exit 3.
+                download_yt_dlp -daao 1
+
+                Write-Host ""
+                Write-Host $text_msg.warn_ytdlp08 -ForegroundColor Green
+                Start-Sleep -Seconds 2
+            }
+        }
+    }
+    catch {
+        # If there is no internet connection, GitHub is unavailable,
+        # or the version cannot be checked, do not block the application.
+        return
+    }
+}
+###############################################################################################
 
 # --- Function: download_all_at_once ---
 # Purpose: Run version check, download ffmpeg and yt-dlp, then request restart (rc=3).
@@ -1610,6 +1848,7 @@ function main_menu {
 #main_menu
 
 try {
+    Test-YtDlpStartupVersion
     main_menu
 }
 catch {
